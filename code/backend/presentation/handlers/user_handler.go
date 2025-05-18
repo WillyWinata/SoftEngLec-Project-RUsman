@@ -23,6 +23,7 @@ import (
 type UserHandler interface {
 	Create(c *gin.Context)
 	Get(c *gin.Context)
+	Login(c *gin.Context)
 	GetAll(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
@@ -52,6 +53,26 @@ func (h *userHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "User created"})
+}
+
+func (h *userHandler) Login(c *gin.Context) {
+	var loginData struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := c.BindJSON(&loginData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	User, err := h.service.Login(loginData.Email, loginData.Password)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, User)
 }
 
 func (h *userHandler) Get(c *gin.Context) {

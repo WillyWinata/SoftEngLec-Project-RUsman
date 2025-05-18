@@ -9,6 +9,7 @@ import (
 type UserService interface {
 	CreateNewUser(User entities.User) error
 	GetUserByID(id string) (entities.User, error)
+	Login(email string, password string) (entities.User, error)
 	GetAllUsers() ([]entities.User, error)
 	UpdateUser(User entities.User) error
 	DeleteUser(id string) error
@@ -22,6 +23,15 @@ func NewUserService() UserService {
 	return &userService{
 		repo: repositories.NewUserRepository(),
 	}
+}
+
+func (s *userService) Login(email string, password string) (entities.User, error) {
+	user, err := s.repo.FindUserByCredential(email, password)
+	if err != nil {
+		return entities.User{}, err
+	}
+
+	return user, nil
 }
 
 func (s *userService) CreateNewUser(User entities.User) error {

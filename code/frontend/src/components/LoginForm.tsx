@@ -64,18 +64,24 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      // Here you would implement your authentication logic
-      // For example:
-      // await signIn('credentials', { email: formData.email, password: formData.password })
+      console.log(formData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch("http://localhost:8888/login-user", {
+        method: "POST", // assuming login
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      // Redirect after successful login
-      // router.push('/dashboard')
+      const result = await response.json();
 
-      console.log("Login successful", formData);
-      navigate("/home");
+      console.log(result);
+
+      if (result.id != null) {
+        console.log("Login successful", formData);
+        navigate("/home");
+      }
     } catch (error) {
       console.error("Login failed", error);
     } finally {

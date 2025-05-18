@@ -33,25 +33,25 @@ func (s *{{EntityNameLower}}Service) CreateNew{{EntityNameUpper}}({{EntityNameUp
 }
 
 func (s *{{EntityNameLower}}Service) Get{{EntityNameUpper}}ByID(id int) (entities.{{EntityNameUpper}}, error) {
-	{{EntityNameUpper}}, err := s.repo.Find{{EntityNameUpper}}(id)
+	{{EntityNameLower}}, err := s.repo.Find{{EntityNameUpper}}(id)
 	if err != nil {
-		return entities.{{EntityNameUpper}}{}, err
+		return entities.{{EntityNameLower}}{}, err
 	}
 
-	return {{EntityNameUpper}}, nil
+	return {{EntityNameLower}}, nil
 }
 
 func (s *{{EntityNameLower}}Service) GetAll{{EntityNameUpper}}s() ([]entities.{{EntityNameUpper}}, error) {
-	{{EntityNameUpper}}s, err := s.repo.GetAll{{EntityNameUpper}}s()
+	{{EntityNameLower}}s, err := s.repo.GetAll{{EntityNameLower}}s()
 	if err != nil {
 		return nil, err
 	}
 
-	return {{EntityNameUpper}}s, nil
+	return {{EntityNameLower}}s, nil
 }
 
 func (s *{{EntityNameLower}}Service) Update{{EntityNameUpper}}({{EntityNameUpper}} entities.{{EntityNameUpper}}) error {
-	err := s.repo.Update{{EntityNameUpper}}({{EntityNameUpper}})
+	err := s.repo.Update{{EntityNameUpper}}({{EntityNameLower}})
 	if err != nil {
 		return err
 	}
