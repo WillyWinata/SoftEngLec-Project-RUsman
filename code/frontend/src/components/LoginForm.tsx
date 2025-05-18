@@ -9,8 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
+import { useNavigate } from "react-router-dom";
 
 export function LoginForm() {
+  const navigate = useNavigate();
+
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -72,6 +75,7 @@ export function LoginForm() {
       // router.push('/dashboard')
 
       console.log("Login successful", formData);
+      navigate("/home");
     } catch (error) {
       console.error("Login failed", error);
     } finally {
