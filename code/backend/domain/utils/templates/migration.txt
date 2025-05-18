@@ -10,7 +10,7 @@ import (
 
 type {{EntityNameUpper}}Migration interface {
 	Migrate{{EntityNameUpper}}()
-	{{EntityNameUpper}}()
+	Seed{{EntityNameUpper}}()
 }
 
 type {{EntityNameLower}}Migration struct {
@@ -28,7 +28,7 @@ func (c *{{EntityNameLower}}Migration) Migrate{{EntityNameUpper}}() {
 	c.db.AutoMigrate(&entities.{{EntityNameUpper}}{})
 }
 
-func (c *{{EntityNameLower}}Migration) {{EntityNameUpper}}() {
+func (c *{{EntityNameLower}}Migration) Seed{{EntityNameUpper}}() {
 	seeds := []entities.{{EntityNameUpper}}{
 		{Id: 1},
 	}
