@@ -28,7 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { User } from "@/lib/types";
+import type { Schedule, User } from "@/lib/types";
 import { format } from "date-fns";
 
 // Update the interface to accept startTime and endTime props
@@ -124,16 +124,28 @@ export default function EventCreationForm({
       category,
       location: location === "Other" ? customLocation : location,
       participants: selectedParticipants,
-      isRecurring,
-      recurringPattern: isRecurring ? recurringPattern : null,
-      recurringDays: isRecurring ? recurringDays : [],
-      recurringEndDate: isRecurring ? recurringEndDate : null,
-      isPrivate,
-      reminders,
-      createdBy: currentUser.id,
+      // isRecurring,
+      // recurringPattern: isRecurring ? recurringPattern : null,
+      // recurringDays: isRecurring ? recurringDays : [],
+      // recurringEndDate: isRecurring ? recurringEndDate : null,
+      // isPrivate,
+      // reminders,
+      // createdBy: currentUser.id,
     };
 
-    console.log("New event:", newEvent);
+    const newSchedule: Schedule = {
+      ...newEvent,
+      id: "",
+      userId: currentUser.id,
+      color: "#10b981",
+      startTime: `${date}T${startTime}:00`,
+      endTime: `${date}T${endTime}:00`,
+      participants: [],
+    };
+
+    createEvent(newSchedule);
+
+    console.log("New event:", newSchedule);
 
     // Reset form and close dialog
     resetForm();
@@ -190,6 +202,20 @@ export default function EventCreationForm({
       );
     }
   }, [isOpen, initialStartTime, initialEndTime, following, selectedDate]);
+
+  const createEvent = async (newEvent: Schedule) => {
+    const response = await fetch("http://localhost:8888/create-schedule", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newEvent),
+    });
+
+    if (response.ok) {
+      console.log("Event created successfully");
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

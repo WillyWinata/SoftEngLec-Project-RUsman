@@ -2,7 +2,7 @@ import type { User, Schedule } from "@/lib/types";
 
 interface CommonFreeTimeProps {
   userSchedule: Schedule[];
-  friendSchedules: { userId: string; user: User; events: Schedule[] }[];
+  friendSchedules: Schedule[];
   selectedFriends: User[];
 }
 
@@ -13,72 +13,77 @@ export default function CommonFreeTime({
 }: CommonFreeTimeProps) {
   // Function to find common free time
   const findCommonFreeTime = () => {
-    const days = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ];
-    const commonFreeTime: Record<string, string[]> = {};
+    // const days = [
+    //   "Monday",
+    //   "Tuesday",
+    //   "Wednesday",
+    //   "Thursday",
+    //   "Friday",
+    //   "Saturday",
+    //   "Sunday",
+    // ];
+    // const commonFreeTime: Record<string, string[]> = {};
 
-    // Initialize with all time slots free for each day
-    days.forEach((day) => {
-      if (day === "Saturday" || day === "Sunday") {
-        commonFreeTime[day] = ["All Day"];
-      } else {
-        commonFreeTime[day] = [
-          "08:00 - 10:00",
-          "10:00 - 12:00",
-          "12:00 - 14:00",
-          "14:00 - 16:00",
-          "16:00 - 18:00",
-          "18:00 - 20:00",
-        ];
-      }
-    });
+    // // Initialize with all time slots free for each day
+    // days.forEach((day) => {
+    //   if (day === "Saturday" || day === "Sunday") {
+    //     commonFreeTime[day] = ["All Day"];
+    //   } else {
+    //     commonFreeTime[day] = [
+    //       "08:00 - 10:00",
+    //       "10:00 - 12:00",
+    //       "12:00 - 14:00",
+    //       "14:00 - 16:00",
+    //       "16:00 - 18:00",
+    //       "18:00 - 20:00",
+    //     ];
+    //   }
+    // });
 
-    // Remove busy slots from user schedule
-    userSchedule.forEach((event) => {
-      const day = event.day;
-      const startHour = Number.parseInt(event.startTime.split(":")[0]);
-      const endHour = Number.parseInt(event.endTime.split(":")[0]);
+    // // Remove busy slots from user schedule
+    // userSchedule.forEach((event) => {
+    //   const startHour = Number.parseInt(event.startTime.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit" }).split(":")[0]);
+    //   const endHour = Number.parseInt(event.endTime.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit" }).split(":")[0]);
+    //   const day = event.startTime.toLocaleString("en-US", { weekday: "long" });
+    //   // Remove time slots that overlap with this event
+    //   commonFreeTime[day] = commonFreeTime[day].filter((slot) => {
+    //     const [slotStart, slotEnd] = slot.split(" - ");
+    //     const slotStartHour = Number.parseInt(slotStart.split(":")[0]);
+    //     const slotEndHour = Number.parseInt(slotEnd.split(":")[0]);
 
-      // Remove time slots that overlap with this event
-      commonFreeTime[day] = commonFreeTime[day].filter((slot) => {
-        const [slotStart, slotEnd] = slot.split(" - ");
-        const slotStartHour = Number.parseInt(slotStart.split(":")[0]);
-        const slotEndHour = Number.parseInt(slotEnd.split(":")[0]);
+    //     // Keep slot if it doesn't overlap with event
+    //     return slotEndHour <= startHour || slotStartHour >= endHour;
+    //   });
+    // });
 
-        // Keep slot if it doesn't overlap with event
-        return slotEndHour <= startHour || slotStartHour >= endHour;
-      });
-    });
+    // // Remove busy slots from friend schedules
+    // friendSchedules.forEach((event) => {
+    //     const startHour = Number.parseInt(event.startTime.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit" }).split(":")[0]);
+    //     const endHour = Number.parseInt(event.endTime.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit" }).split(":")[0]);
+    //     const day = event.startTime.toLocaleString("en-US", { weekday: "long" });
 
-    // Remove busy slots from friend schedules
-    friendSchedules.forEach(({ events }) => {
-      events.forEach((event) => {
-        const day = event.day;
-        const startHour = Number.parseInt(event.startTime.split(":")[0]);
-        const endHour = Number.parseInt(event.endTime.split(":")[0]);
+    //     // Remove time slots that overlap with this event
+    //     commonFreeTime[day] = commonFreeTime[day].filter((slot) => {
+    //       if (slot === "All Day") return false;
 
-        // Remove time slots that overlap with this event
-        commonFreeTime[day] = commonFreeTime[day].filter((slot) => {
-          if (slot === "All Day") return false;
+    //       const [slotStart, slotEnd] = slot.split(" - ");
+    //       const slotStartHour = Number.parseInt(slotStart.split(":")[0]);
+    //       const slotEndHour = Number.parseInt(slotEnd.split(":")[0]);
 
-          const [slotStart, slotEnd] = slot.split(" - ");
-          const slotStartHour = Number.parseInt(slotStart.split(":")[0]);
-          const slotEndHour = Number.parseInt(slotEnd.split(":")[0]);
+    //       // Keep slot if it doesn't overlap with event
+    //       return slotEndHour <= startHour || slotStartHour >= endHour;
+    //     });
+    //   });
 
-          // Keep slot if it doesn't overlap with event
-          return slotEndHour <= startHour || slotStartHour >= endHour;
-        });
-      });
-    });
-
-    return commonFreeTime;
+    return {
+      "Monday": ["All Day"],
+      "Tuesday": ["All Day"],
+      "Wednesday": ["All Day"],
+      "Thursday": ["All Day"],
+      "Friday": ["All Day"],
+      "Saturday": ["All Day"],
+      "Sunday": ["All Day"],
+    };
   };
 
   const commonFreeTime = findCommonFreeTime();

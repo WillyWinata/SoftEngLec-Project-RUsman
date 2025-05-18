@@ -14,12 +14,11 @@ import {
   endOfMonth,
   addMonths,
   subMonths,
-  getDay,
   isSameMonth,
 } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import type { User, Schedule } from "@/lib/types";
 import ScheduleLegend from "@/components/ScheduleLegend";
 import CommonFreeTime from "@/components/CommonFreeTime";
@@ -34,7 +33,7 @@ import {
 } from "@/components/ui/select";
 
 interface ScheduleViewProps {
-  schedules: { userId: string; user: User; events: Schedule[] }[];
+  schedules: Schedule[];
   currentView: "day" | "week" | "month";
   setCurrentView: (view: "day" | "week" | "month") => void;
   currentDate: Date;
@@ -177,62 +176,86 @@ export default function ScheduleView({
   };
 
   // Get events for a specific day and time slot (for week view)
-  const getEventsForTimeSlot = (day: string, timeSlot: string) => {
-    const dayIndex = DAYS_OF_WEEK.indexOf(day);
+  // const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    return schedules.flatMap(({ user, events }) =>
-      events
-        .filter((event) => {
-          const dayName = getDayNameFromIndex(dayIndex);
-          const slotHour = Number.parseInt(timeSlot.split(":")[0], 10);
-          const eventStartHour = Number.parseInt(
-            event.startTime.split(":")[0],
-            10
-          );
-          const eventEndHour = Number.parseInt(event.endTime.split(":")[0], 10);
-
-          // Handle events that end at midnight (00:00)
-          if (eventEndHour === 0) {
-            return event.day === dayName && eventStartHour <= slotHour;
-          }
-
-          return (
-            event.day === dayName &&
-            eventStartHour <= slotHour &&
-            eventEndHour > slotHour
-          );
-        })
-        .map((event) => ({ ...event, user }))
-    );
+  const getEventsForTimeSlot = (day: string, timeSlot: string, schedules: Schedule[]) => {
+    // Convert timeSlot (HH:MM) to hours and minutes
+    const [slotHours, slotMinutes] = timeSlot.split(':').map(Number);
+    const slotTotalMinutes = slotHours * 60 + slotMinutes;
+    
+    return schedules.filter((event) => {
+      // Check if event occurs on the specified day
+      const eventDay = DAYS_OF_WEEK[new Date(event.startTime).getDay()];
+      if (eventDay !== day) return false;
+      
+      const startTime = new Date(event.startTime);
+      const endTime = new Date(event.endTime);
+      // Get start and end times in minutes since midnight
+      const startTotalMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+      let endTotalMinutes = endTime.getHours() * 60 + endTime.getMinutes();
+      
+      // Handle overnight events (endTime is next day)
+      if (endTotalMinutes < startTotalMinutes) {
+        endTotalMinutes += 24 * 60; // Add 24 hours
+      }
+      
+      // Check if time slot falls within the event duration
+      return slotTotalMinutes >= startTotalMinutes && slotTotalMinutes < endTotalMinutes;
+    });
   };
 
   // Get events for a specific day (for month view)
-  const getEventsForDay = (date: Date) => {
-    const dayName = FULL_DAYS[getDay(date) === 0 ? 6 : getDay(date) - 1]; // Adjust for Monday start
-
-    return schedules.flatMap(({ user, events }) =>
-      events
-        .filter((event) => event.day === dayName)
-        .map((event) => ({ ...event, user }))
-    );
+  const getEventsForDay = (date: Date, schedules: Schedule[]) => {
+    // Get the year, month, and day for comparison
+    const targetYear = date.getFullYear();
+    const targetMonth = date.getMonth();
+    const targetDay = date.getDate();
+  
+    return schedules.flatMap((schedule) => {
+      const eventStart = new Date(schedule.startTime);
+      const eventEnd = new Date(schedule.endTime);
+  
+      // Check if the event overlaps with the target day
+      const startsOnDay = 
+        eventStart.getFullYear() === targetYear &&
+        eventStart.getMonth() === targetMonth &&
+        eventStart.getDate() === targetDay;
+  
+      const endsOnDay = 
+        eventEnd.getFullYear() === targetYear &&
+        eventEnd.getMonth() === targetMonth &&
+        eventEnd.getDate() === targetDay;
+  
+      // For multi-day events, check if target day is between start and end
+      const spansDay =
+        eventStart < date && eventEnd > new Date(date.getTime() + 24 * 60 * 60 * 1000);
+  
+      if (startsOnDay || endsOnDay || spansDay) {
+        return {
+          ...schedule,
+        };
+      }
+      return [];
+    });
   };
 
   // Get events for the selected day (for day view)
-  const getEventsForSelectedDay = () => {
-    const dayName =
-      FULL_DAYS[getDay(currentDate) === 0 ? 6 : getDay(currentDate) - 1]; // Adjust for Monday start
-
-    return schedules.flatMap(({ user, events }) =>
-      events
-        .filter((event) => event.day === dayName)
-        .map((event) => ({ ...event, user }))
-    );
+  const getEventsForSelectedDay = (
+    currentDate: Date, 
+    schedules: Schedule[] // Using your exact Schedule type
+  ) => {
+    const dayName = FULL_DAYS[currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1];
+    
+    return schedules.filter(schedule => {
+      const eventDay = DAYS_OF_WEEK[new Date(schedule.startTime).getDay() === 0 ? 6 : new Date(schedule.startTime).getDay() - 1];
+      return eventDay === dayName;
+    });
   };
 
   // Helper to convert day index to day name
-  const getDayNameFromIndex = (dayIndex: number): string => {
-    return FULL_DAYS[dayIndex];
-  };
+  // const getDayNameFromIndex = (dayIndex: number): string => {
+  //   return FULL_DAYS[dayIndex];
+  // };
 
   // Get the date for a specific day column (for week view)
   const getDateForDay = (dayIndex: number) => {
@@ -321,7 +344,7 @@ export default function ScheduleView({
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const currentDay = day;
-        const dayEvents = getEventsForDay(currentDay);
+        const dayEvents = getEventsForDay(currentDay, schedules);
         const isCurrentMonth = isSameMonth(day, monthStart);
 
         days.push(
@@ -441,7 +464,7 @@ export default function ScheduleView({
                   {DAYS_OF_WEEK.map((day, dayIndex) => (
                     <div key={day} className="col-span-1">
                       {TIME_SLOTS.map((time) => {
-                        const events = getEventsForTimeSlot(day, time);
+                        const events = getEventsForTimeSlot(day, time, schedules);
                         const dayDate = addDays(
                           startOfWeek(currentDate, { weekStartsOn: 1 }),
                           dayIndex
@@ -490,7 +513,7 @@ export default function ScheduleView({
                                     {event.title}
                                   </div>
                                   <div className="text-[10px] text-gray-300">
-                                    {event.course}
+                                    {event.description}
                                   </div>
                                 </div>
                               </div>
@@ -511,7 +534,7 @@ export default function ScheduleView({
 
   // Render the day view calendar
   const renderDayView = () => {
-    const dayEvents = getEventsForSelectedDay();
+    const dayEvents = getEventsForSelectedDay(currentDate, schedules);
     const dayName = format(currentDate, "EEEE"); // Full day name
 
     return (
@@ -621,17 +644,17 @@ export default function ScheduleView({
                             {event.title}
                           </div>
                           <div className="text-xs text-gray-300">
-                            {event.course}
+                            {event.description}
                           </div>
                           <div className="text-xs mt-1 flex items-center">
                             <span className="text-gray-400">
                               {event.startTime} - {event.endTime}
                             </span>
-                            {event.user && (
+                            {/* {event.participants && (
                               <Badge className="ml-2 bg-gray-700 text-white text-[10px]">
-                                {event.user.name.split(" ")[0]}
+                                {event.description.split(" ")[0]}
                               </Badge>
-                            )}
+                            )} */}
                           </div>
                         </div>
                       </div>
@@ -830,13 +853,13 @@ export default function ScheduleView({
 
           {/* Legend, Common Free Time, and Group Work Recommendations */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-t border-gray-800">
-            <ScheduleLegend schedules={schedules} />
+            <ScheduleLegend schedules={[{userId: currentUser.id, user: currentUser, events: schedules}]} />
             {selectedFriends.length > 0 && (
               <>
                 <CommonFreeTime
-                  userSchedule={
-                    schedules.find((s) => s.userId === "user-1")?.events || []
-                  }
+                  userSchedule={[
+                    schedules[0]
+                  ]}
                   friendSchedules={schedules.filter(
                     (s) => s.userId !== "user-1"
                   )}
@@ -844,7 +867,7 @@ export default function ScheduleView({
                 />
                 <GroupWorkRecommendations
                   userSchedule={
-                    schedules.find((s) => s.userId === "user-1")?.events || []
+                    schedules
                   }
                   friendSchedules={schedules.filter(
                     (s) => s.userId !== "user-1"

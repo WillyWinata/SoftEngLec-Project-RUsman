@@ -78,6 +78,8 @@ export function LoginForm() {
 
       console.log(result);
 
+      localStorage.setItem("user", JSON.stringify(result));
+
       if (result.id != null) {
         console.log("Login successful", formData);
         navigate("/home");

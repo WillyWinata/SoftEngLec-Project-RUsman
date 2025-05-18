@@ -1,10 +1,10 @@
 export default interface Event {
-  id: number;
+  id: string;
+  userId: string;
   title: string;
   description: string;
-  date: string;
-  time: string;
-  duration: string;
+  startTime: string;
+  endTime: string;
   category: string;
   location: string;
   participants: { id: number; name: string; avatar: string }[];

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/application/services"
@@ -62,6 +63,7 @@ func (h *userHandler) Login(c *gin.Context) {
 	}
 
 	if err := c.BindJSON(&loginData); err != nil {
+		log.Panicln(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}

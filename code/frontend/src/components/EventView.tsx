@@ -29,7 +29,7 @@ import {
 import EventCreationForm from "@/components/EventCreationForm";
 import type { User } from "@/lib/types";
 import Participant from "@/models/Participant";
-import Event from "@/models/Event";
+import Event from "@/models/Schedule";
 
 interface EventViewProps {
   currentUser: User;

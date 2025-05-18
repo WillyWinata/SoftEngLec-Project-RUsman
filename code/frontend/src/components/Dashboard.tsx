@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import ScheduleView from "@/components/ScheduleView";
 import FollowingView from "@/components/FollowingView";
 import EventView from "@/components/EventView";
 import type { User, Schedule } from "@/lib/types";
+import { useNavigate } from "react-router-dom";
 
 // Sample data
-const CURRENT_USER: User = {
-  id: "user-1",
-  name: "John Doe",
-  email: "john.doe@example.com",
-  department: "Computer Science",
-  year: "2023",
-  avatar: "/placeholder.svg?height=40&width=40",
-};
+// const CURRENT_USER: User = {
+//   id: "user-1",
+//   name: "John Doe",
+//   email: "john.doe@example.com",
+//   department: "Computer Science",
+//   year: "2023",
+//   avatar: "/placeholder.svg?height=40&width=40",
+// };
 
 const FOLLOWING: User[] = [
   {
@@ -56,172 +57,8 @@ const FOLLOWING: User[] = [
   },
 ];
 
-// Sample schedule data
-const SCHEDULES: Record<string, Schedule[]> = {
-  "user-1": [
-    {
-      id: "event-1",
-      title: "Your Schedule: Database",
-      course: "Database (RS-01)",
-      day: "Monday",
-      startTime: "08:00",
-      endTime: "09:40",
-      color: "#3b82f6", // blue
-    },
-    {
-      id: "event-2",
-      title: "Your Schedule: Database",
-      course: "Database (RS-01)",
-      day: "Tuesday",
-      startTime: "08:00",
-      endTime: "09:40",
-      color: "#3b82f6", // blue
-    },
-    {
-      id: "event-3",
-      title: "Your Schedule: Database",
-      course: "Database (RS-01)",
-      day: "Wednesday",
-      startTime: "08:00",
-      endTime: "09:40",
-      color: "#3b82f6", // blue
-    },
-    {
-      id: "event-4",
-      title: "Your Schedule: Database",
-      course: "Database (RS-01)",
-      day: "Thursday",
-      startTime: "08:00",
-      endTime: "09:40",
-      color: "#3b82f6", // blue
-    },
-    {
-      id: "event-5",
-      title: "Your Schedule: Database",
-      course: "Database (RS-01)",
-      day: "Friday",
-      startTime: "08:00",
-      endTime: "09:40",
-      color: "#3b82f6", // blue
-    },
-  ],
-  "user-2": [
-    {
-      id: "event-6",
-      title: "Alice's Schedule: Computer Networks",
-      course: "Computer Networks (LA-02)",
-      day: "Monday",
-      startTime: "10:00",
-      endTime: "11:40",
-      color: "#f59e0b", // amber
-    },
-    {
-      id: "event-7",
-      title: "Alice's Schedule: Computer Networks",
-      course: "Computer Networks (LA-02)",
-      day: "Tuesday",
-      startTime: "10:00",
-      endTime: "11:40",
-      color: "#f59e0b", // amber
-    },
-    {
-      id: "event-8",
-      title: "Alice's Schedule: Computer Networks",
-      course: "Computer Networks (LA-02)",
-      day: "Wednesday",
-      startTime: "10:00",
-      endTime: "11:40",
-      color: "#f59e0b", // amber
-    },
-    {
-      id: "event-9",
-      title: "Alice's Schedule: Computer Networks",
-      course: "Computer Networks (LA-02)",
-      day: "Thursday",
-      startTime: "10:00",
-      endTime: "11:40",
-      color: "#f59e0b", // amber
-    },
-    {
-      id: "event-10",
-      title: "Alice's Schedule: Computer Networks",
-      course: "Computer Networks (LA-02)",
-      day: "Friday",
-      startTime: "10:00",
-      endTime: "11:40",
-      color: "#f59e0b", // amber
-    },
-  ],
-  "user-3": [
-    {
-      id: "event-11",
-      title: "Bob's Schedule: Software Engineering",
-      course: "Software Engineering (LA-03)",
-      day: "Monday",
-      startTime: "13:00",
-      endTime: "14:40",
-      color: "#10b981", // emerald
-    },
-    {
-      id: "event-12",
-      title: "Bob's Schedule: Software Engineering",
-      course: "Software Engineering (LA-03)",
-      day: "Wednesday",
-      startTime: "13:00",
-      endTime: "14:40",
-      color: "#10b981", // emerald
-    },
-    {
-      id: "event-13",
-      title: "Bob's Schedule: Software Engineering",
-      course: "Software Engineering (LA-03)",
-      day: "Friday",
-      startTime: "13:00",
-      endTime: "14:40",
-      color: "#10b981", // emerald
-    },
-  ],
-  "user-4": [
-    {
-      id: "event-14",
-      title: "Carol's Schedule: Data Mining",
-      course: "Data Mining (LA-04)",
-      day: "Tuesday",
-      startTime: "13:00",
-      endTime: "14:40",
-      color: "#8b5cf6", // violet
-    },
-    {
-      id: "event-15",
-      title: "Carol's Schedule: Data Mining",
-      course: "Data Mining (LA-04)",
-      day: "Thursday",
-      startTime: "13:00",
-      endTime: "14:40",
-      color: "#8b5cf6", // violet
-    },
-    {
-      id: "event-16",
-      title: "Carol's Schedule: Machine Learning",
-      course: "Machine Learning (LA-05)",
-      day: "Monday",
-      startTime: "15:00",
-      endTime: "16:40",
-      color: "#8b5cf6", // violet
-    },
-    {
-      id: "event-17",
-      title: "Carol's Schedule: Machine Learning",
-      course: "Machine Learning (LA-05)",
-      day: "Wednesday",
-      startTime: "15:00",
-      endTime: "16:40",
-      color: "#8b5cf6", // violet
-    },
-  ],
-};
-
 export default function Dashboard() {
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<string[]>(["user-2"]); // Default to showing Alice's schedule
   const [currentView, setCurrentView] = useState<"day" | "week" | "month">(
     "week"
@@ -229,51 +66,92 @@ export default function Dashboard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   // Add a new state for active tab
   const [activeTab, setActiveTab] = useState("calendar");
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); 
+  const navigate = useNavigate();
 
   // Toggle friend selection
   const toggleFriend = (userId: string) => {
     setSelectedFriends((prev) =>
       prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
-    );
-  };
+    ? prev.filter((id) => id !== userId)
+    : [...prev, userId]
+  );
+};
 
-  // Get all schedules to display (current user + selected friends)
-  const getSchedulesToDisplay = () => {
-    const schedules: { userId: string; user: User; events: Schedule[] }[] = [
-      {
-        userId: CURRENT_USER.id,
-        user: CURRENT_USER,
-        events: SCHEDULES[CURRENT_USER.id] || [],
+useEffect(() => {
+  console.log("Dashboard mounted");
+}, []);
+
+useEffect(() => {
+  const user = localStorage.getItem("user");
+  if (user) {
+    setIsLoading(false);
+    setCurrentUser(JSON.parse(user));
+  } else {
+    navigate("/");
+  }
+}, [navigate]);
+
+useEffect(() => {
+  if (!currentUser) return;
+
+  const getSchedules = async () => {
+    const response = await fetch("http://localhost:8888/get-schedules", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ];
-
-    // Add selected friends' schedules (only if mutual follow)
-    selectedFriends.forEach((friendId) => {
-      const friend = FOLLOWING.find((f) => f.id === friendId);
-      if (friend && friend.mutualFollow) {
-        schedules.push({
-          userId: friend.id,
-          user: friend,
-          events: SCHEDULES[friend.id] || [],
-        });
-      }
+      body: JSON.stringify({
+        userId: currentUser.id,
+      }),
     });
-
-    return schedules;
+    const data = await response.json();
+    setSchedules(data);
   };
+  
+  getSchedules();
+}, [currentUser]);
+
+
+  // const getSchedulesToDisplay = () => {
+  //   const schedules: { userId: string; user: User; events: Schedule[] }[] = [
+  //     {
+  //       userId: CURRENT_USER.id,
+  //       user: CURRENT_USER,
+  //       events: SCHEDULES[CURRENT_USER.id] || [],
+  //     },
+  //   ];
+
+  //   // Add selected friends' schedules (only if mutual follow)
+  //   selectedFriends.forEach((friendId) => {
+  //     const friend = FOLLOWING.find((f) => f.id === friendId);
+  //     if (friend && friend.mutualFollow) {
+  //       schedules.push({
+  //         userId: friend.id,
+  //         user: friend,
+  //         events: SCHEDULES[friend.id] || [],
+  //       });
+  //     }
+  //   });
+
+  //   return schedules;
+  // };
 
   // Add this function to handle tab switching
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
 
+  if (isLoading) {
+    return <div className="flex min-h-screen bg-gray-950">Loading...</div>;
+  }
+
   // Update the return statement to pass the new props to Sidebar
   return (
     <>
       <Sidebar
-        currentUser={CURRENT_USER}
+        currentUser={currentUser as User}
         following={FOLLOWING}
         selectedFriends={selectedFriends}
         toggleFriend={toggleFriend}
@@ -318,7 +196,7 @@ export default function Dashboard() {
 
         {activeTab === "calendar" ? (
           <ScheduleView
-            schedules={getSchedulesToDisplay()}
+            schedules={schedules}
             currentView={currentView}
             setCurrentView={setCurrentView}
             currentDate={currentDate}
@@ -328,12 +206,12 @@ export default function Dashboard() {
                 .map((id) => FOLLOWING.find((f) => f.id === id))
                 .filter(Boolean) as User[]
             }
-            currentUser={CURRENT_USER}
+            currentUser={currentUser as User}
             following={FOLLOWING}
           />
         ) : activeTab === "events" ? (
           <div className="flex-1 p-4">
-            <EventView currentUser={CURRENT_USER} following={FOLLOWING} />
+            <EventView currentUser={currentUser as User} following={FOLLOWING} />
           </div>
         ) : (
           <div className="flex-1 p-4">

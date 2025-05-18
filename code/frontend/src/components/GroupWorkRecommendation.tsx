@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 
 interface GroupWorkRecommendationsProps {
   userSchedule: Schedule[]
-  friendSchedules: { userId: string; user: User; events: Schedule[] }[]
+  friendSchedules: Schedule[]
   selectedFriends: User[]
   onTimeSlotClick?: (day: string, startTime: string, endTime: string) => void
 }
@@ -44,7 +44,7 @@ export default function GroupWorkRecommendations({
 
     // Check user's schedule
     for (const event of userSchedule) {
-      if (event.day !== day) continue
+      // if (event.day !== day) continue
 
       const eventStartHour = Number.parseInt(event.startTime.split(":")[0])
       const eventStartMinute = Number.parseInt(event.startTime.split(":")[1] || "0")
@@ -64,29 +64,25 @@ export default function GroupWorkRecommendations({
     }
 
     // Check each friend's schedule
-    for (const { events } of friendSchedules) {
-      for (const event of events) {
-        if (event.day !== day) continue
+    for (const event of friendSchedules) {
+      // if (event.day !== day) continue
 
-        const eventStartHour = Number.parseInt(event.startTime.split(":")[0])
-        const eventStartMinute = Number.parseInt(event.startTime.split(":")[1] || "0")
-        const eventEndHour = Number.parseInt(event.endTime.split(":")[0])
-        const eventEndMinute = Number.parseInt(event.endTime.split(":")[1] || "0")
+      const eventStartHour = Number.parseInt(event.startTime.split(":")[0])
+      const eventStartMinute = Number.parseInt(event.startTime.split(":")[1] || "0")
+      const eventEndHour = Number.parseInt(event.endTime.split(":")[0])
+      const eventEndMinute = Number.parseInt(event.endTime.split(":")[1] || "0")
 
-        const eventStartInMinutes = eventStartHour * 60 + eventStartMinute
-        const eventEndInMinutes = eventEndHour === 0 ? 24 * 60 : eventEndHour * 60 + eventEndMinute
+      const eventStartInMinutes = eventStartHour * 60 + eventStartMinute
+      const eventEndInMinutes = eventEndHour === 0 ? 24 * 60 : eventEndHour * 60 + eventEndMinute
 
-        // Check if there's an overlap
-        if (
-          (startTimeInMinutes < eventEndInMinutes && endTimeInMinutes > eventStartInMinutes) ||
-          (eventStartInMinutes < endTimeInMinutes && eventEndInMinutes > startTimeInMinutes)
-        ) {
-          return false
-        }
+      // Check if there's an overlap
+      if (
+        (startTimeInMinutes < eventEndInMinutes && endTimeInMinutes > eventStartInMinutes) ||
+        (eventStartInMinutes < endTimeInMinutes && eventEndInMinutes > startTimeInMinutes)
+      ) {
+        return false
       }
     }
-
-    return true
   }
 
   // Find available time slots for group work

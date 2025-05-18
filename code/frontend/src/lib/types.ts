@@ -10,10 +10,13 @@ export interface User {
 
 export interface Schedule {
   id: string;
+  userId: string;
   title: string;
-  course: string;
-  day: string;
+  description: string;
   startTime: string;
   endTime: string;
+  location: string;
+  category: string;
+  participants: User[];
   color: string;
 }
