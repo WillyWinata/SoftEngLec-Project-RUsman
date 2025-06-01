@@ -130,9 +130,11 @@ export default function FollowingView({ following }: FollowingViewProps) {
   const filteredDiscoverable = filterStudents(discoverableStudents);
 
   return (
-    <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl">
-      <CardHeader className="bg-gray-900 border-b border-gray-800">
-        <CardTitle className="text-pink-400">Student Connections</CardTitle>
+    <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
+      <CardHeader className="border-b border-gray-800">
+        <CardTitle className="text-pink-400 text-2xl">
+          Student Connections
+        </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <Tabs defaultValue="following" className="w-full">

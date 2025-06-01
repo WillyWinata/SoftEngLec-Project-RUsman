@@ -26,9 +26,9 @@ export default function Sidebar({
   const mutualFollows = following.filter((user) => user.mutualFollow);
 
   return (
-    <div className="w-64 bg-gray-900 text-white min-h-screen p-4 border-r border-gray-800">
+    <div className=" fixed top-0 left-0 w-64 bg-gray-900 text-white min-h-screen p-4 border-r border-gray-800">
       <div className="mb-8 p-2">
-        <h1 className="text-xl font-bold text-pink-400">SE Calendar</h1>
+        <h1 className="text-4xl tracking-widest font-bold text-pink-400">RUsman</h1>
       </div>
 
       <nav className="space-y-1 mb-6">

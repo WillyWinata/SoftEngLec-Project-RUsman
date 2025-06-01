@@ -67,52 +67,51 @@ export default function Dashboard() {
   // Add a new state for active tab
   const [activeTab, setActiveTab] = useState("calendar");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   // Toggle friend selection
   const toggleFriend = (userId: string) => {
     setSelectedFriends((prev) =>
       prev.includes(userId)
-    ? prev.filter((id) => id !== userId)
-    : [...prev, userId]
-  );
-};
-
-useEffect(() => {
-  console.log("Dashboard mounted");
-}, []);
-
-useEffect(() => {
-  const user = localStorage.getItem("user");
-  if (user) {
-    setIsLoading(false);
-    setCurrentUser(JSON.parse(user));
-  } else {
-    navigate("/");
-  }
-}, [navigate]);
-
-useEffect(() => {
-  if (!currentUser) return;
-
-  const getSchedules = async () => {
-    const response = await fetch("http://localhost:8888/get-schedules", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: currentUser.id,
-      }),
-    });
-    const data = await response.json();
-    setSchedules(data);
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
   };
-  
-  getSchedules();
-}, [currentUser]);
 
+  useEffect(() => {
+    console.log("Dashboard mounted");
+  }, []);
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      setIsLoading(false);
+      setCurrentUser(JSON.parse(user));
+    } else {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const getSchedules = async () => {
+      const response = await fetch("http://localhost:8888/get-schedules", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: currentUser.id,
+        }),
+      });
+      const data = await response.json();
+      setSchedules(data);
+    };
+
+    getSchedules();
+  }, [currentUser]);
 
   // const getSchedulesToDisplay = () => {
   //   const schedules: { userId: string; user: User; events: Schedule[] }[] = [
@@ -150,14 +149,16 @@ useEffect(() => {
   // Update the return statement to pass the new props to Sidebar
   return (
     <>
-      <Sidebar
-        currentUser={currentUser as User}
-        following={FOLLOWING}
-        selectedFriends={selectedFriends}
-        toggleFriend={toggleFriend}
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-      />
+      <div className="w-64">
+        <Sidebar
+          currentUser={currentUser as User}
+          following={FOLLOWING}
+          selectedFriends={selectedFriends}
+          toggleFriend={toggleFriend}
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+        />
+      </div>
       <div className="flex-1 flex flex-col">
         <div className="p-4">
           <div className="mb-4 bg-gray-900 rounded-md inline-flex">
@@ -211,7 +212,10 @@ useEffect(() => {
           />
         ) : activeTab === "events" ? (
           <div className="flex-1 p-4">
-            <EventView currentUser={currentUser as User} following={FOLLOWING} />
+            <EventView
+              currentUser={currentUser as User}
+              following={FOLLOWING}
+            />
           </div>
         ) : (
           <div className="flex-1 p-4">

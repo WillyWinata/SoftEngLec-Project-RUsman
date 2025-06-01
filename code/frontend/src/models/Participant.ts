@@ -1,5 +1,9 @@
 export default interface Participant {
-  id: number;
+  id: string;
   name: string;
-  avatar: string;
+  email: string;
+  password: string;
+  role: string;
+  major: string;
+  profilePicture: string;
 }
