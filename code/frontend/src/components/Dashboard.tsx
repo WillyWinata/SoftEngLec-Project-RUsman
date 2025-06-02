@@ -160,41 +160,6 @@ export default function Dashboard() {
         />
       </div>
       <div className="flex-1 flex flex-col">
-        <div className="p-4">
-          <div className="mb-4 bg-gray-900 rounded-md inline-flex">
-            <button
-              className={`px-4 py-2 text-sm font-medium rounded-md ${
-                activeTab === "calendar"
-                  ? "bg-pink-900 text-white"
-                  : "text-gray-300 hover:text-white"
-              }`}
-              onClick={() => setActiveTab("calendar")}
-            >
-              Calendar
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium rounded-md ${
-                activeTab === "events"
-                  ? "bg-pink-900 text-white"
-                  : "text-gray-300 hover:text-white"
-              }`}
-              onClick={() => setActiveTab("events")}
-            >
-              Events
-            </button>
-            <button
-              className={`px-4 py-2 text-sm font-medium rounded-md ${
-                activeTab === "following"
-                  ? "bg-pink-900 text-white"
-                  : "text-gray-300 hover:text-white"
-              }`}
-              onClick={() => setActiveTab("following")}
-            >
-              Following
-            </button>
-          </div>
-        </div>
-
         {activeTab === "calendar" ? (
           <ScheduleView
             schedules={schedules}
