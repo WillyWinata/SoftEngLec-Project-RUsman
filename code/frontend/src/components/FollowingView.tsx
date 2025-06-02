@@ -86,6 +86,34 @@ export default function FollowingView({ following }: FollowingViewProps) {
   );
   const [followingList, setFollowingList] = useState(following);
 
+  const user = localStorage.getItem("user");
+  const userId = user ? JSON.parse(user).id : null;
+
+  const getAllFollowedUsers = async () => {
+    const response = await fetch("http://localhost:8888/get-followed", {
+      method: "POST",
+      body: JSON.stringify({ user_id: userId }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await response.json();
+    setFollowingList(result);
+  };
+
+  const getAllAvailableUsers = async () => {
+    const response = await fetch("http://localhost:8888/get-all-users", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await response.json();
+    setDiscoverableStudents(result);
+  };
+
   // Handle follow/unfollow action
   const handleFollowToggle = (studentId: string, isDiscoverable = false) => {
     if (isDiscoverable) {
