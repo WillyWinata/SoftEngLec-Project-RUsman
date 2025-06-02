@@ -18,6 +18,7 @@ func initialize() {
 
 	followMigration := migrations.NewFollowMigration()
 	followMigration.MigrateFollow()
+	followMigration.SeedFollow()
 
 	followRequestMigration := migrations.NewFollowRequestMigration()
 	followRequestMigration.MigrateFollowRequest()

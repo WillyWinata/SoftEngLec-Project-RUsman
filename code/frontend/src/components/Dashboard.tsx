@@ -5,7 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import ScheduleView from "@/components/ScheduleView";
 import FollowingView from "@/components/FollowingView";
 import EventView from "@/components/EventView";
-import type { User, Schedule } from "@/lib/types";
+import type { User, Schedule, UserFollowDetails } from "@/lib/types";
 import { useNavigate } from "react-router-dom";
 
 // Sample data
@@ -30,6 +30,13 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [followingList, setFollowingList] = useState<User[]>([]);
+  const [userFollowDetails, setUserFollowDetails] = useState<UserFollowDetails>({
+    user: currentUser as User,
+    following: [],
+    followers: [],
+    followingPending: [],
+  });
+  const [mutualFollow, setMutualFollow] = useState<User[]>([]);
 
   const user = localStorage.getItem("user");
   const userId = user ? JSON.parse(user).id : null;
@@ -45,29 +52,43 @@ export default function Dashboard() {
     );
   };
 
-  const getAllFollowedUsers = async () => {
-    const response = await fetch(
-      "http://localhost:8888/get-user-follow/" + userId,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const result = await response.json();
-    setFollowingList(result.following);
-  };
-
+  
   useEffect(() => {
+    if(!currentUser) return;
+
+    const getAllFollowedUsers = async () => {
+      const response = await fetch(
+        "http://localhost:8888/get-user-follow/" + userId,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      const result = await response.json();
+      setFollowingList(result.following);
+  
+      setUserFollowDetails({
+        user: result.user,
+        following: result.following,
+        follower: result.follower,
+        followingPending: result.followingPending,
+      });
+  
+      const mutual = result.following.filter((user: User) =>
+          result.follower.some((follower: User) => follower.id === user.id)
+      );
+    
+      setMutualFollow(mutual);
+    };
+
     getAllFollowedUsers();
-    console.log("Dashboard mounted");
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     const user = localStorage.getItem("user");
-    
 
     if (user) {
       setIsLoading(false);
@@ -120,6 +141,8 @@ export default function Dashboard() {
 
     getSchedules();
   }, [currentUser]);
+
+  
 
   // const getSchedulesToDisplay = () => {
   //   const schedules: { userId: string; user: User; events: Schedule[] }[] = [
@@ -182,6 +205,7 @@ export default function Dashboard() {
             }
             currentUser={currentUser as User}
             following={followingList}
+            mutualFollow={mutualFollow}
           />
         ) : activeTab === "events" ? (
           <div className="flex-1 p-4">

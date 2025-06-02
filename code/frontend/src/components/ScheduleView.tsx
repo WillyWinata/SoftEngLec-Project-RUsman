@@ -41,6 +41,7 @@ interface ScheduleViewProps {
   selectedFriends: User[];
   currentUser: User;
   following: User[];
+  mutualFollow: User[];
 }
 
 // Full 24-hour time slots (00:00 to 23:00)
@@ -51,15 +52,15 @@ const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => {
 
 // Days of the week
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const FULL_DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+// const FULL_DAYS = [
+//   "Monday",
+//   "Tuesday",
+//   "Wednesday",
+//   "Thursday",
+//   "Friday",
+//   "Saturday",
+//   "Sunday",
+// ];
 
 // Height of each time slot in pixels (used for scrolling calculations)
 const TIME_SLOT_HEIGHT = 14; // for week view
@@ -74,6 +75,7 @@ export default function ScheduleView({
   selectedFriends,
   currentUser,
   following,
+  mutualFollow,
 }: ScheduleViewProps) {
   const [showEventForm, setShowEventForm] = useState(false);
   const [initialScrollDone, setInitialScrollDone] = useState(false);
@@ -906,6 +908,7 @@ export default function ScheduleView({
         endTime={eventFormData?.endTime}
         currentUser={currentUser}
         following={following}
+        mutualFollow={mutualFollow}
       />
     </div>
   );

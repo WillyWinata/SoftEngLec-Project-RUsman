@@ -131,7 +131,11 @@ func (c *followMigration) SeedFollow() {
 			UserId:      uuid.MustParse("61f5fef7-3aa9-4048-97d8-6ed3dfbd35c2"),
 			FollowingId: uuid.MustParse("cff21ea9-90e2-41f6-8424-5de2c5f3bb1a"),
 		},
-
+		{
+			Id:          uuid.New(),
+			UserId:      uuid.MustParse("aef8c352-f6fd-4f7e-8b4a-5f8f3a7d9f4b"),
+			FollowingId: uuid.MustParse("33a5345c-daad-40c3-9a1f-9eb7fc5b9325"),
+		},
 	}
 
 	for _, element := range seeds {

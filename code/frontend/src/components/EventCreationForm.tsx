@@ -40,6 +40,7 @@ interface EventCreationFormProps {
   endTime?: string;
   currentUser: User;
   following: User[];
+  mutualFollow: User[];
 }
 
 // Sample locations
@@ -67,6 +68,7 @@ export default function EventCreationForm({
   endTime: initialEndTime,
   currentUser,
   following,
+  mutualFollow,
 }: EventCreationFormProps) {
   const [activeTab, setActiveTab] = useState("details");
   const [title, setTitle] = useState("");
@@ -190,15 +192,14 @@ export default function EventCreationForm({
 
       // Set a default description
       setDescription(
-        `Group work session with ${following
-          .filter((f) => f.mutualFollow)
+        `Group work session with ${mutualFollow.length} mutual followers: ${mutualFollow
           .map((f) => f.name)
           .join(", ")}`
       );
 
       // Pre-select mutual followers as participants
       setSelectedParticipants(
-        following.filter((f) => f.mutualFollow).map((f) => f.id)
+        mutualFollow.map((f) => f.id)
       );
     }
   }, [isOpen, initialStartTime, initialEndTime, following, selectedDate]);
@@ -354,9 +355,9 @@ export default function EventCreationForm({
               <div className="space-y-2">
                 <Label className="text-gray-200">Invite Participants</Label>
                 <div className="bg-gray-800 border border-gray-700 rounded-md p-4 max-h-[300px] overflow-y-auto">
-                  {following.length > 0 ? (
+                  {mutualFollow.length > 0 ? (
                     <div className="space-y-3">
-                      {following.map((person) => (
+                      {mutualFollow.map((person) => (
                         <div
                           key={person.id}
                           className="flex items-center space-x-2 py-1"
@@ -389,7 +390,7 @@ export default function EventCreationForm({
                               </div>
                             </div>
                           </div>
-                          {person.mutualFollow && (
+                          {mutualFollow && (
                             <Badge className="bg-pink-900/50 text-pink-300 text-xs">
                               Mutual Follow
                             </Badge>
@@ -412,7 +413,7 @@ export default function EventCreationForm({
                   </Label>
                   <div className="flex flex-wrap gap-2">
                     {selectedParticipants.map((id) => {
-                      const person = following.find((f) => f.id === id);
+                      const person = mutualFollow.find((f) => f.id === id);
                       if (!person) return null;
 
                       return (

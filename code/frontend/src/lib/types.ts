@@ -29,3 +29,10 @@ export interface ScheduleInvitation {
   user: User;
   status: string;
 }
+
+export interface UserFollowDetails {
+  user: User;
+  following: User[];
+  follower: User[];
+  followingPending: User[];
+}
