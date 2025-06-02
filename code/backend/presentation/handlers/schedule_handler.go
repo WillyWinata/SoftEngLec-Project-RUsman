@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/application/services"
@@ -29,6 +28,11 @@ type ScheduleHandler interface {
 	GetAll(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	AcceptSchedule(c *gin.Context)
+	RejectSchedule(c *gin.Context)
+	GetAllScheduleRequestsByUser(c *gin.Context)
+	GetAllScheduleRequestsBySchedule(c *gin.Context)
+	GetAllAcceptedSchedulesBySchedule(c *gin.Context)
 }
 
 type scheduleHandler struct {
@@ -78,18 +82,17 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		return
 	}
 	schedule := entities.Schedule{
-		Id:           uuid.New(),
-		UserId:       uuid.MustParse(scheduleRequest.UserId),
-		StartTime:    startTime,
-		EndTime:      endTime,
-		Title:        scheduleRequest.Title,
-		Description:  scheduleRequest.Description,
-		Status:       scheduleRequest.Status,
-		Type:         scheduleRequest.Type,
-		Location:     scheduleRequest.Location,
-		Category:     scheduleRequest.Category,
-		Participants: scheduleRequest.Participants,
-		Color:        scheduleRequest.Color,
+		Id:          uuid.New(),
+		UserId:      uuid.MustParse(scheduleRequest.UserId),
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Title:       scheduleRequest.Title,
+		Description: scheduleRequest.Description,
+		Status:      scheduleRequest.Status,
+		Type:        scheduleRequest.Type,
+		Location:    scheduleRequest.Location,
+		Category:    scheduleRequest.Category,
+		Color:       scheduleRequest.Color,
 	}
 
 	if err := h.service.CreateNewSchedule(schedule); err != nil {
@@ -102,7 +105,7 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 }
 
 func (h *scheduleHandler) Get(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := uuid.Parse(c.Param("id"))
 
 	Schedule, err := h.service.GetScheduleByID(id)
 	if err != nil {
@@ -155,7 +158,7 @@ func (h *scheduleHandler) Update(c *gin.Context) {
 }
 
 func (h *scheduleHandler) Delete(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := uuid.Parse(c.Param("id"))
 
 	if err := h.service.DeleteSchedule(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -163,4 +166,94 @@ func (h *scheduleHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Schedule deleted"})
+}
+
+func (h *scheduleHandler) AcceptSchedule(c *gin.Context) {
+	type AcceptScheduleRequest struct {
+		Id uuid.UUID `json:"id"`
+	}
+
+	var scheduleRequest AcceptScheduleRequest
+
+	if err := c.ShouldBindJSON(&scheduleRequest); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	if err := h.service.AcceptSchedule(scheduleRequest.Id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Schedule accepted"})
+}
+
+func (h *scheduleHandler) RejectSchedule(c *gin.Context) {
+	type RejectScheduleRequest struct {
+		Id uuid.UUID `json:"id"`
+	}
+
+	var scheduleRequest RejectScheduleRequest
+
+	if err := c.ShouldBindJSON(&scheduleRequest); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	if err := h.service.RejectSchedule(scheduleRequest.Id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Schedule rejected"})
+}
+
+func (h *scheduleHandler) GetAllScheduleRequestsByUser(c *gin.Context) {
+	userID, err := uuid.Parse(c.Param("userID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	participants, err := h.service.GetAllScheduleRequestsByUser(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, participants)
+}
+
+func (h *scheduleHandler) GetAllScheduleRequestsBySchedule(c *gin.Context) {
+	scheduleID, err := uuid.Parse(c.Param("scheduleID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid schedule ID"})
+		return
+	}
+
+	participants, err := h.service.GetAllScheduleRequestsBySchedule(scheduleID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, participants)
+}
+
+func (h *scheduleHandler) GetAllAcceptedSchedulesBySchedule(c *gin.Context) {
+	scheduleID, err := uuid.Parse(c.Param("scheduleID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid schedule ID"})
+		return
+	}
+
+	participants, err := h.service.GetAllAcceptedSchedulesBySchedule(scheduleID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, participants)
 }

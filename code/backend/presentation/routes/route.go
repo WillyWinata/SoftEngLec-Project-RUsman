@@ -20,6 +20,11 @@ func InitRoutes(r *gin.Engine) {
 	r.POST("/get-schedules", scheduleHandler.GetAll)
 	r.PUT("/update-schedule/:id", scheduleHandler.Update)
 	r.DELETE("/delete-schedule/:id", scheduleHandler.Delete)
+	r.GET("/get-schedules-request-by-user/:id", scheduleHandler.GetAllScheduleRequestsByUser)
+	r.GET("/get-schedules-request-by-schedule/:id", scheduleHandler.GetAllScheduleRequestsBySchedule)
+	r.GET("/get-schedules-accepted-by-schedule/:id", scheduleHandler.GetAllAcceptedSchedulesBySchedule)
+	r.PATCH("/accept-schedule", scheduleHandler.AcceptSchedule)
+	r.PATCH("/reject-schedule", scheduleHandler.RejectSchedule)
 
 	followHandler := handlers.NewFollowHandler()
 	r.POST("/get-follows-by-user", followHandler.GetFollowsByUser)

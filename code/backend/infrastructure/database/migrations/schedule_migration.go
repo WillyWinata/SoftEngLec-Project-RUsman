@@ -25,8 +25,8 @@ func NewScheduleMigration() ScheduleMigration {
 }
 
 func (c *scheduleMigration) MigrateSchedule() {
-	c.db.Migrator().DropTable(&entities.Schedule{})
-	c.db.AutoMigrate(&entities.Schedule{})
+	c.db.Migrator().DropTable(&entities.Schedule{}, &entities.ScheduleParticipant{})
+	c.db.AutoMigrate(&entities.Schedule{}, &entities.ScheduleParticipant{})
 }
 
 func (c *scheduleMigration) SeedSchedule() {
