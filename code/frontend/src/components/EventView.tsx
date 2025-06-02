@@ -1,6 +1,6 @@
 "use client";
 
-import { act, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Calendar,
@@ -29,154 +29,11 @@ import {
 import EventCreationForm from "@/components/EventCreationForm";
 import type { Schedule, ScheduleInvitation, User } from "@/lib/types";
 import Participant from "@/models/Participant";
-import { get } from "http";
 
 interface EventViewProps {
   currentUser: User;
   following: User[];
 }
-
-// Sample events data with invitation status
-const EVENTS = [
-  {
-    id: 1,
-    title: "Team Meeting",
-    description: "Weekly team sync to discuss project progress",
-    date: "2025-05-15",
-    time: "10:00 AM",
-    duration: "1 hour",
-    category: "work",
-    location: "Room 301",
-    participants: [
-      {
-        id: 1,
-        name: "Sarah Johnson",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-      {
-        id: 3,
-        name: "Emily Wong",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-    ],
-    createdBy: { id: "user-1", name: "John Doe" },
-    invitationStatus: "accepted", // new field
-  },
-  {
-    id: 2,
-    title: "Study Group",
-    description: "Prepare for the upcoming database exam",
-    date: "2025-05-16",
-    time: "12:30 PM",
-    duration: "2 hours",
-    category: "study",
-    location: "Library",
-    participants: [
-      {
-        id: 2,
-        name: "Michael Chen",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-      {
-        id: 5,
-        name: "Anna Kim",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-    ],
-    createdBy: { id: "user-2", name: "Alice Smith" },
-    invitationStatus: "pending", // new field
-  },
-  {
-    id: 3,
-    title: "Project Deadline",
-    description: "Final submission for the semester project",
-    date: "2025-05-20",
-    time: "5:00 PM",
-    duration: "N/A",
-    category: "work",
-    location: "Online",
-    participants: [],
-    createdBy: { id: "user-1", name: "John Doe" },
-    invitationStatus: "accepted", // new field
-  },
-  {
-    id: 4,
-    title: "Group Presentation",
-    description: "Present our findings to the class",
-    date: "2025-05-22",
-    time: "7:00 AM",
-    duration: "30 minutes",
-    category: "study",
-    location: "Room 105",
-    participants: [
-      {
-        id: 1,
-        name: "Sarah Johnson",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-      {
-        id: 4,
-        name: "David Lee",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-    ],
-    createdBy: { id: "user-3", name: "Bob Johnson" },
-    invitationStatus: "pending", // new field
-  },
-  {
-    id: 5,
-    title: "Database Workshop",
-    description: "Hands-on workshop on advanced SQL techniques",
-    date: "2025-05-25",
-    time: "2:00 PM",
-    duration: "3 hours",
-    category: "study",
-    location: "Computer Lab",
-    participants: [
-      {
-        id: 2,
-        name: "Michael Chen",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-      {
-        id: 5,
-        name: "Anna Kim",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-    ],
-    createdBy: { id: "user-4", name: "Carol Williams" },
-    invitationStatus: "declined", // new field
-  },
-  {
-    id: 6,
-    title: "End of Semester Party",
-    description: "Celebrate the end of the semester with classmates",
-    date: "2025-06-01",
-    time: "7:00 PM",
-    duration: "4 hours",
-    category: "social",
-    location: "Student Center",
-    participants: [
-      {
-        id: 1,
-        name: "Sarah Johnson",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-      {
-        id: 3,
-        name: "Emily Wong",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-      {
-        id: 4,
-        name: "David Lee",
-        avatar: "/placeholder.svg?height=24&width=24",
-      },
-    ],
-    createdBy: { id: "user-5", name: "David Lee" },
-    invitationStatus: "pending", // new field
-  },
-];
 
 export default function EventView({ currentUser, following }: EventViewProps) {
 
