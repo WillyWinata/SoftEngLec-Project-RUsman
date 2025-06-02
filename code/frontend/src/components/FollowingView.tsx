@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,55 +19,6 @@ interface FollowingViewProps {
   following: User[];
 }
 
-// Sample data for discoverable students
-const DISCOVERABLE_STUDENTS: User[] = [
-  {
-    id: "user-6",
-    name: "Emma Wilson",
-    email: "emma.w@example.com",
-    department: "Computer Science",
-    year: "2023",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: false,
-  },
-  {
-    id: "user-7",
-    name: "Michael Brown",
-    email: "michael.b@example.com",
-    department: "Information Systems",
-    year: "2022",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: false,
-  },
-  {
-    id: "user-8",
-    name: "Sophia Garcia",
-    email: "sophia.g@example.com",
-    department: "Data Science",
-    year: "2024",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: false,
-  },
-  {
-    id: "user-9",
-    name: "James Martinez",
-    email: "james.m@example.com",
-    department: "Software Engineering",
-    year: "2023",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: false,
-  },
-  {
-    id: "user-10",
-    name: "Olivia Taylor",
-    email: "olivia.t@example.com",
-    department: "Computer Science",
-    year: "2022",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: false,
-  },
-];
-
 // Departments for filtering
 const DEPARTMENTS = [
   "All Departments",
@@ -81,9 +32,7 @@ const DEPARTMENTS = [
 export default function FollowingView({ following }: FollowingViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [department, setDepartment] = useState("All Departments");
-  const [discoverableStudents, setDiscoverableStudents] = useState(
-    DISCOVERABLE_STUDENTS
-  );
+  const [discoverableStudents, setDiscoverableStudents] = useState<User[]>([]);
   const [followingList, setFollowingList] = useState(following);
 
   const user = localStorage.getItem("user");
@@ -103,7 +52,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
   };
 
   const getAllAvailableUsers = async () => {
-    const response = await fetch("http://localhost:8888/get-all-users", {
+    const response = await fetch("http://localhost:8888/get-users", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -111,8 +60,13 @@ export default function FollowingView({ following }: FollowingViewProps) {
     });
 
     const result = await response.json();
+    console.log(result)
     setDiscoverableStudents(result);
   };
+
+  useEffect(() => {
+    getAllAvailableUsers();
+  }, []);
 
   // Handle follow/unfollow action
   const handleFollowToggle = (studentId: string, isDiscoverable = false) => {
@@ -222,7 +176,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                   >
                     <div className="flex items-center space-x-3">
                       <img
-                        src={student.avatar || "/placeholder.svg"}
+                        src={student.profilePicture}
                         alt={student.name}
                         className="w-10 h-10 rounded-full bg-gray-700"
                       />
@@ -232,7 +186,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                         </h3>
                         <p className="text-sm text-gray-400">{student.email}</p>
                         <div className="text-xs text-gray-500">
-                          {student.department} • {student.year}
+                          {student.major}
                         </div>
                       </div>
                     </div>
@@ -278,7 +232,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                   >
                     <div className="flex items-center space-x-3">
                       <img
-                        src={student.avatar || "/placeholder.svg"}
+                        src={student.profilePicture}
                         alt={student.name}
                         className="w-10 h-10 rounded-full bg-gray-700"
                       />
@@ -288,7 +242,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                         </h3>
                         <p className="text-sm text-gray-400">{student.email}</p>
                         <div className="text-xs text-gray-500">
-                          {student.department} • {student.year}
+                          {student.major} • {student.studentId}
                         </div>
                       </div>
                     </div>
