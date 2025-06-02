@@ -56,7 +56,7 @@ func (h *followRequestHandler) CreateFollowRequest(c *gin.Context) {
 
 func (h *followRequestHandler) GetAllByUser(c *gin.Context) {
 	type FollowRequestID struct {
-		UserID uuid.UUID `json:"user_id"`
+		UserID uuid.UUID `json:"userId"`
 	}
 
 	var followRequestID FollowRequestID
@@ -77,7 +77,7 @@ func (h *followRequestHandler) GetAllByUser(c *gin.Context) {
 
 func (h *followRequestHandler) GetAllByRequestee(c *gin.Context) {
 	type FollowRequestID struct {
-		RequesteeID uuid.UUID `json:"requestee_id"`
+		RequesteeID uuid.UUID `json:"requesteeId"`
 	}
 
 	var followRequestID FollowRequestID
@@ -98,7 +98,7 @@ func (h *followRequestHandler) GetAllByRequestee(c *gin.Context) {
 
 func (h *followRequestHandler) AcceptFollowRequest(c *gin.Context) {
 	type FollowRequestID struct {
-		FollowRequestID uuid.UUID `json:"follow_request_id"`
+		FollowRequestID uuid.UUID `json:"followRequestId"`
 	}
 
 	var followRequestID FollowRequestID
@@ -118,7 +118,7 @@ func (h *followRequestHandler) AcceptFollowRequest(c *gin.Context) {
 
 func (h *followRequestHandler) RejectFollowRequest(c *gin.Context) {
 	type FollowRequestID struct {
-		FollowRequestID uuid.UUID `json:"follow_request_id"`
+		FollowRequestID uuid.UUID `json:"followRequestId"`
 	}
 
 	var followRequestID FollowRequestID

@@ -12,6 +12,8 @@ type FollowRepository interface {
 	GetFollowByUser(userId uuid.UUID) ([]entities.Follow, error)
 	DeleteFollow(model entities.Follow) error
 	GetFollowByUserAndFollower(userId uuid.UUID, followerId uuid.UUID) (entities.Follow, error)
+	GetFollowingByUser(userId uuid.UUID) ([]entities.Follow, error)
+	GetFollowersByUser(userId uuid.UUID) ([]entities.Follow, error)
 }
 
 type followRepository struct {
@@ -42,5 +44,19 @@ func (r *followRepository) GetFollowByUserAndFollower(userId uuid.UUID, follower
 
 	err := r.db.Where("user_id = ?", userId).Where("follower_id = ?", followerId).First(entity).Error
 
+	return entity, err
+}
+
+func (r *followRepository) GetFollowingByUser(userId uuid.UUID) ([]entities.Follow, error) {
+	var entity []entities.Follow
+
+	err := r.db.Where("follower_id = ?", userId).Find(&entity).Error
+	return entity, err
+}
+
+func (r *followRepository) GetFollowersByUser(userId uuid.UUID) ([]entities.Follow, error) {
+	var entity []entities.Follow
+
+	err := r.db.Where("user_id = ?", userId).Find(&entity).Error
 	return entity, err
 }

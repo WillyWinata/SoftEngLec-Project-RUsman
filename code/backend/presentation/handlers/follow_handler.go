@@ -53,7 +53,7 @@ func (h *followHandler) Follow(c *gin.Context) {
 
 func (h *followHandler) GetFollowsByUser(c *gin.Context) {
 	type FollowID struct {
-		UserId uuid.UUID
+		UserId uuid.UUID `json:"userId"`
 	}
 
 	var userId FollowID

@@ -13,3 +13,10 @@ type User struct {
 	ProfilePicture string    `gorm:"not null" json:"profilePicture"`
 	IsActive       bool      `gorm:"not null" json:"isActive"`
 }
+
+type UserFollowResponse struct {
+	User             User   `json:"user"`
+	Follower         []User `json:"follower"`
+	Following        []User `json:"following"`
+	FollowingPending []User `json:"followingPending"`
+}

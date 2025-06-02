@@ -13,6 +13,7 @@ func InitRoutes(r *gin.Engine) {
 	r.GET("/get-users", userHandler.GetAll)
 	r.PUT("/update-user/:id", userHandler.Update)
 	r.DELETE("/delete-user/:id", userHandler.Delete)
+	r.GET("/get-user-follow/:id", userHandler.GetUserFollowResponse)
 
 	scheduleHandler := handlers.NewScheduleHandler()
 	r.POST("/create-schedule", scheduleHandler.Create)

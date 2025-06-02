@@ -28,6 +28,7 @@ type UserHandler interface {
 	GetAll(c *gin.Context)
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
+	GetUserFollowResponse(c *gin.Context)
 }
 
 type userHandler struct {
@@ -126,4 +127,47 @@ func (h *userHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+}
+
+func (h *userHandler) GetUserFollowResponse(c *gin.Context) {
+	id := c.Param("id")
+
+	userId, err := uuid.Parse(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	user, err := h.service.GetUserByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	followers, err := h.service.GetFollowersByUser(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
+
+	following, err := h.service.GetFollowingByUser(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
+
+	followingPending, err := h.service.GetFollowingPendingRequestsByUser(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		return
+	}
+
+	response := entities.UserFollowResponse{
+		User:             user,
+		Follower:         followers,
+		Following:        following,
+		FollowingPending: followingPending,
+	}
+
+	c.JSON(http.StatusOK, response)
 }

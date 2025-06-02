@@ -13,10 +13,15 @@ type UserService interface {
 	GetAllUsers() ([]entities.User, error)
 	UpdateUser(User entities.User) error
 	DeleteUser(id string) error
+	GetFollowersByUser(userId uuid.UUID) ([]entities.User, error)
+	GetFollowingByUser(userId uuid.UUID) ([]entities.User, error)
+	GetFollowingPendingRequestsByUser(userId uuid.UUID) ([]entities.User, error)
 }
 
 type userService struct {
-	repo repositories.UserRepository
+	repo              repositories.UserRepository
+	followRepo        repositories.FollowRepository
+	followRequestRepo repositories.FollowRequestRepository
 }
 
 func NewUserService() UserService {
@@ -77,6 +82,63 @@ func (s *userService) DeleteUser(id string) error {
 	}
 
 	return nil
+}
+
+func (s *userService) GetFollowersByUser(userId uuid.UUID) ([]entities.User, error) {
+	followers, err := s.followRepo.GetFollowersByUser(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var f []entities.User
+	for _, follower := range followers {
+		user, err := s.repo.FindUser(follower.Following.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		f = append(f, user)
+	}
+
+	return f, nil
+}
+
+func (s *userService) GetFollowingByUser(userId uuid.UUID) ([]entities.User, error) {
+	following, err := s.followRepo.GetFollowingByUser(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var f []entities.User
+	for _, follow := range following {
+		user, err := s.repo.FindUser(follow.User.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		f = append(f, user)
+	}
+
+	return f, nil
+}
+
+func (s *userService) GetFollowingPendingRequestsByUser(userId uuid.UUID) ([]entities.User, error) {
+	followingPending, err := s.followRequestRepo.GetFollowingPendingRequestsByUser(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var f []entities.User
+	for _, pending := range followingPending {
+		user, err := s.repo.FindUser(pending.Requestee.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		f = append(f, user)
+	}
+
+	return f, nil
 }
 
 func ValidateUser(User entities.User) bool {

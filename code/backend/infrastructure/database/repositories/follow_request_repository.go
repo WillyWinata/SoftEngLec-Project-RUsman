@@ -14,6 +14,7 @@ type FollowRequestRepository interface {
 	AcceptFollowRequest(requestId uuid.UUID) error
 	RejectFollowRequest(requestId uuid.UUID) error
 	GetFollowByID(requestId uuid.UUID) (entities.FollowRequest, error)
+	GetFollowingPendingRequestsByUser(userId uuid.UUID) ([]entities.FollowRequest, error)
 }
 
 type followRequestRepository struct {
@@ -56,4 +57,11 @@ func (r *followRequestRepository) GetFollowByID(requestId uuid.UUID) (entities.F
 	err := r.db.First(&entity, requestId).Error
 
 	return entity, err
+}
+
+func (r *followRequestRepository) GetFollowingPendingRequestsByUser(userId uuid.UUID) ([]entities.FollowRequest, error) {
+	var entities []entities.FollowRequest
+
+	err := r.db.Where("requestee_id = ? AND status = ?", userId, "Pending").Find(&entities).Error
+	return entities, err
 }
