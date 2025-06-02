@@ -9,6 +9,8 @@ import (
 
 type ScheduleRepository interface {
 	CreateNewSchedule(model entities.Schedule) error
+	BatchCreateNewSchedule(models []entities.Schedule) error
+	BatchAddParticipantsToSchedule(participants []entities.ScheduleParticipant) error
 	FindSchedule(id uuid.UUID) (entities.Schedule, error)
 	GetAllSchedules(userID string) ([]entities.Schedule, error)
 	UpdateSchedule(model entities.Schedule) error
@@ -28,8 +30,16 @@ func NewScheduleRepository() ScheduleRepository {
 	return &scheduleRepository{db: database.GetDB()}
 }
 
+func (r *scheduleRepository) BatchCreateNewSchedule(models []entities.Schedule) error {
+	return r.db.Create(&models).Error
+}
+
 func (r *scheduleRepository) CreateNewSchedule(model entities.Schedule) error {
 	return r.db.Create(&model).Error
+}
+
+func (r *scheduleRepository) BatchAddParticipantsToSchedule(participants []entities.ScheduleParticipant) error {
+	return r.db.Create(&participants).Error
 }
 
 func (r *scheduleRepository) FindSchedule(id uuid.UUID) (entities.Schedule, error) {

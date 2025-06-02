@@ -18,45 +18,6 @@ import { useNavigate } from "react-router-dom";
 //   avatar: "/placeholder.svg?height=40&width=40",
 // };
 
-const FOLLOWING: User[] = [
-  {
-    id: "user-2",
-    name: "Alice Smith",
-    email: "alice.smith@example.com",
-    department: "Computer Science",
-    year: "2022",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: true,
-  },
-  {
-    id: "user-3",
-    name: "Bob Johnson",
-    email: "bob.johnson@example.com",
-    department: "Software Engineering",
-    year: "2023",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: true,
-  },
-  {
-    id: "user-4",
-    name: "Carol Williams",
-    email: "carol.williams@example.com",
-    department: "Data Science",
-    year: "2022",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: true,
-  },
-  {
-    id: "user-5",
-    name: "David Lee",
-    email: "david.lee@example.com",
-    department: "Business",
-    year: "2021",
-    avatar: "/placeholder.svg?height=40&width=40",
-    mutualFollow: false, // Not mutual follow
-  },
-];
-
 export default function Dashboard() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<string[]>(["user-2"]); // Default to showing Alice's schedule
@@ -68,6 +29,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [followingList, setFollowingList] = useState<User[]>([]);
+
+  const user = localStorage.getItem("user");
+  const userId = user ? JSON.parse(user).id : null;
+
   const navigate = useNavigate();
 
   // Toggle friend selection
@@ -79,7 +45,23 @@ export default function Dashboard() {
     );
   };
 
+  const getAllFollowedUsers = async () => {
+    const response = await fetch(
+      "http://localhost:8888/get-user-follow/" + userId,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result = await response.json();
+    setFollowingList(result.following);
+  };
+
   useEffect(() => {
+    getAllFollowedUsers();
     console.log("Dashboard mounted");
   }, []);
 
@@ -152,7 +134,7 @@ export default function Dashboard() {
       <div className="w-64">
         <Sidebar
           currentUser={currentUser as User}
-          following={FOLLOWING}
+          following={followingList}
           selectedFriends={selectedFriends}
           toggleFriend={toggleFriend}
           activeTab={activeTab}
@@ -169,22 +151,22 @@ export default function Dashboard() {
             setCurrentDate={setCurrentDate}
             selectedFriends={
               selectedFriends
-                .map((id) => FOLLOWING.find((f) => f.id === id))
+                .map((id) => followingList.find((f) => f.id === id))
                 .filter(Boolean) as User[]
             }
             currentUser={currentUser as User}
-            following={FOLLOWING}
+            following={followingList}
           />
         ) : activeTab === "events" ? (
           <div className="flex-1 p-4">
             <EventView
               currentUser={currentUser as User}
-              following={FOLLOWING}
+              following={followingList}
             />
           </div>
         ) : (
           <div className="flex-1 p-4">
-            <FollowingView following={FOLLOWING} />
+            <FollowingView following={followingList} />
           </div>
         )}
       </div>

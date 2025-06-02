@@ -47,14 +47,15 @@ func NewScheduleHandler() ScheduleHandler {
 
 func (h *scheduleHandler) Create(c *gin.Context) {
 	type ScheduleRequest struct {
-		UserId       string          `json:"userId"`
-		StartTime    string          `json:"startTime"`
-		EndTime      string          `json:"endTime"`
-		Title        string          `json:"title"`
-		Description  string          `json:"description"`
-		Location     string          `json:"location"`
-		Category     string          `json:"category"`
-		Participants []entities.User `json:"participants"`
+		UserId         string          `json:"userId"`
+		StartTime      string          `json:"startTime"`
+		EndTime        string          `json:"endTime"`
+		Title          string          `json:"title"`
+		Description    string          `json:"description"`
+		Location       string          `json:"location"`
+		Category       string          `json:"category"`
+		Participants   []entities.User `json:"participants"`
+		RecurringUntil string          `json:"recurringUntil"`
 	}
 
 	var scheduleRequest ScheduleRequest
@@ -78,6 +79,69 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid end time"})
 		return
 	}
+
+	if scheduleRequest.RecurringUntil != "" {
+		recurringUntil, err := time.Parse("2006-01-02T15:04:05", scheduleRequest.RecurringUntil)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recurring until time"})
+			return
+		}
+
+		if startTime.After(recurringUntil) {
+			log.Println("Start time must be before recurring until date")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Start time must be before recurring until date"})
+			return
+		}
+
+		delta := endTime.Sub(startTime)
+
+		schedules := make([]entities.Schedule, 0)
+
+		for currTime := startTime; !currTime.After(recurringUntil); currTime = currTime.AddDate(0, 0, 7) {
+			schedule := entities.Schedule{
+				Id:          uuid.New(),
+				UserId:      uuid.MustParse(scheduleRequest.UserId),
+				StartTime:   currTime,
+				EndTime:     currTime.Add(delta),
+				Title:       scheduleRequest.Title,
+				Description: scheduleRequest.Description,
+				Location:    scheduleRequest.Location,
+				Category:    scheduleRequest.Category,
+			}
+
+			schedulesParticipants := make([]entities.ScheduleParticipant, len((scheduleRequest.Participants)))
+			var scheduleParticipant entities.ScheduleParticipant
+
+			for _, participant := range scheduleRequest.Participants {
+				scheduleParticipant = entities.ScheduleParticipant{
+					Id:         uuid.New(),
+					ScheduleId: schedule.Id,
+					UserId:     participant.Id,
+				}
+
+				schedulesParticipants = append(schedulesParticipants, scheduleParticipant)
+			}
+
+			schedules = append(schedules, schedule)
+
+			if err := h.service.BatchAddParticipantsToSchedule(schedulesParticipants); err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		}
+
+		if err := h.service.BatchCreateNewSchedule(schedules); err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"message": "Recurring schedules created"})
+		return
+	}
+
 	schedule := entities.Schedule{
 		Id:          uuid.New(),
 		UserId:      uuid.MustParse(scheduleRequest.UserId),
@@ -89,7 +153,27 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		Category:    scheduleRequest.Category,
 	}
 
+	scheduleParticipants := make([]entities.ScheduleParticipant, len(scheduleRequest.Participants))
+
+	var scheduleParticipant entities.ScheduleParticipant
+
+	for _, participant := range scheduleRequest.Participants {
+		scheduleParticipant = entities.ScheduleParticipant{
+			Id:         uuid.New(),
+			ScheduleId: schedule.Id,
+			UserId:     participant.Id,
+		}
+
+		scheduleParticipants = append(scheduleParticipants, scheduleParticipant)
+	}
+
 	if err := h.service.CreateNewSchedule(schedule); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.BatchAddParticipantsToSchedule(scheduleParticipants); err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
