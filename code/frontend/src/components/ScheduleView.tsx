@@ -175,22 +175,23 @@ export default function ScheduleView({
     return "";
   };
 
-  // Get events for a specific day and time slot (for week view)
-  // const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
+  // Get events for a specific day and time slot (for week view) - FIXED
   const getEventsForTimeSlot = (
-    day: string,
+    date: Date, // Menggunakan tanggal spesifik
     timeSlot: string,
     schedules: Schedule[]
   ) => {
+    // Format tanggal ke YYYY-MM-DD untuk perbandingan
+    const targetDate = format(date, "yyyy-MM-dd");
+    
     // Convert timeSlot (HH:MM) to hours and minutes
     const [slotHours, slotMinutes] = timeSlot.split(":").map(Number);
     const slotTotalMinutes = slotHours * 60 + slotMinutes;
 
     return schedules.filter((event) => {
-      // Check if event occurs on the specified day
-      const eventDay = DAYS_OF_WEEK[new Date(event.startTime).getDay()];
-      if (eventDay !== day) return false;
+      // Check if event occurs on the specified date
+      const eventDate = format(new Date(event.startTime), "yyyy-MM-dd");
+      if (eventDate !== targetDate) return false;
 
       const startTime = new Date(event.startTime);
       const endTime = new Date(event.endTime);
@@ -248,22 +249,17 @@ export default function ScheduleView({
     });
   };
 
-  // Get events for the selected day (for day view)
+  // Get events for the selected day (for day view) - FIXED
   const getEventsForSelectedDay = (
     currentDate: Date,
-    schedules: Schedule[] // Using your exact Schedule type
+    schedules: Schedule[]
   ) => {
-    const dayName =
-      FULL_DAYS[currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1];
-
+    // Format tanggal ke YYYY-MM-DD untuk perbandingan
+    const targetDate = format(currentDate, "yyyy-MM-dd");
+    
     return schedules.filter((schedule) => {
-      const eventDay =
-        DAYS_OF_WEEK[
-          new Date(schedule.startTime).getDay() === 0
-            ? 6
-            : new Date(schedule.startTime).getDay() - 1
-        ];
-      return eventDay === dayName;
+      const eventDate = format(new Date(schedule.startTime), "yyyy-MM-dd");
+      return eventDate === targetDate;
     });
   };
 
@@ -479,14 +475,14 @@ export default function ScheduleView({
                   {DAYS_OF_WEEK.map((day, dayIndex) => (
                     <div key={day} className="col-span-1">
                       {TIME_SLOTS.map((time) => {
-                        const events = getEventsForTimeSlot(
-                          day,
-                          time,
-                          schedules
-                        );
                         const dayDate = addDays(
                           startOfWeek(currentDate, { weekStartsOn: 1 }),
                           dayIndex
+                        );
+                        const events = getEventsForTimeSlot(
+                          dayDate, // Menggunakan tanggal spesifik
+                          time,
+                          schedules
                         );
                         const isCurrentTimeSlot =
                           isToday(dayDate) &&
