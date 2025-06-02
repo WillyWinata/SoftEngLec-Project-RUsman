@@ -135,6 +135,7 @@ func (s *scheduleService) GetAllScheduleRequestsByUser(userID uuid.UUID) ([]enti
 		response := entities.ScheduleParticipantResponse{
 			Schedule: schedule,
 			User:     user,
+			Status:   participant.Status,
 		}
 
 		responses = append(responses, response)
@@ -164,6 +165,7 @@ func (s *scheduleService) GetAllScheduleRequestsBySchedule(scheduleID uuid.UUID)
 		response := entities.ScheduleParticipantResponse{
 			Schedule: schedule,
 			User:     user,
+			Status:   participant.Status,
 		}
 
 		responses = append(responses, response)
@@ -193,6 +195,7 @@ func (s *scheduleService) GetAllAcceptedSchedulesBySchedule(scheduleID uuid.UUID
 		response := entities.ScheduleParticipantResponse{
 			Schedule: schedule,
 			User:     user,
+			Status:   participant.Status,
 		}
 
 		responses = append(responses, response)

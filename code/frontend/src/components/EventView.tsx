@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { act, useEffect, useState } from "react";
 import {
   Search,
   Calendar,
@@ -27,9 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import EventCreationForm from "@/components/EventCreationForm";
-import type { User } from "@/lib/types";
+import type { Schedule, ScheduleInvitation, User } from "@/lib/types";
 import Participant from "@/models/Participant";
-import Event from "@/models/Schedule";
+import { get } from "http";
 
 interface EventViewProps {
   currentUser: User;
@@ -179,62 +179,60 @@ const EVENTS = [
 ];
 
 export default function EventView({ currentUser, following }: EventViewProps) {
+
   const [activeTab, setActiveTab] = useState("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [events, setEvents] = useState(EVENTS);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [upcomingEvents, setUpcomingEvents] = useState<Schedule[]>([]);
+  const [myEvents, setMyEvents] = useState<Schedule[]>([]);
+  const [invitedEvents, setInvitedEvents] = useState<ScheduleInvitation[]>([]);
 
-  // Handle invitation response
-  const handleInvitationResponse = (
-    eventId: number,
-    status: "accepted" | "declined"
-  ) => {
-    setEvents(
-      events.map((event) =>
-        event.id === eventId ? { ...event, invitationStatus: status } : event
-      )
-    );
-  };
+  useEffect(() => {
+    const getSchedulesAcceptedByUser = async () => {
+      const response = await fetch("http://localhost:8888/get-schedules-accepted-by-user/" + currentUser.id, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-  // Filter events based on the active tab
-  const filteredEvents = events.filter((event) => {
-    // First apply search filter if any
-    if (searchQuery) {
-      const matchesSearch =
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const data = await response.json();
 
-      if (!matchesSearch) return false;
+      setUpcomingEvents(data);
     }
 
-    if (activeTab === "upcoming") {
-      // Show all upcoming events
-      return new Date(event.date) >= new Date();
-    } else if (activeTab === "created") {
-      // Show events created by the current user
-      return event.createdBy.id === currentUser.id;
-    } else if (activeTab === "invited") {
-      // Show events where the current user is invited
-      // Apply status filter if selected
-      if (statusFilter !== "all") {
-        return (
-          event.createdBy.id !== currentUser.id &&
-          event.invitationStatus === statusFilter
-        );
-      }
-      return event.createdBy.id !== currentUser.id;
-    }
-    return true;
-  });
+    const getMyEvents = async () => {
+      const response = await fetch("http://localhost:8888/get-schedules", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: currentUser.id,
+        }),
+      });
 
-  // Count pending invitations
-  const pendingInvitationsCount = events.filter(
-    (event) =>
-      event.createdBy.id !== currentUser.id &&
-      event.invitationStatus === "pending"
-  ).length;
+      const data = await response.json();
+      setMyEvents(data);
+    }
+
+    const getInvitedEvents = async () => {
+      const response = await fetch("http://localhost:8888/get-schedules-request-by-schedule/" + currentUser.id, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      setInvitedEvents(data);
+    }
+
+    getSchedulesAcceptedByUser();
+    getMyEvents();
+    getInvitedEvents();
+  }, [currentUser.id]);
 
   return (
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
@@ -277,9 +275,9 @@ export default function EventView({ currentUser, following }: EventViewProps) {
             >
               <Mail className="h-4 w-4 mr-2" />
               Invited to
-              {pendingInvitationsCount > 0 && (
+              {invitedEvents.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {pendingInvitationsCount}
+                  {invitedEvents.length}
                 </span>
               )}
             </TabsTrigger>
@@ -332,68 +330,74 @@ export default function EventView({ currentUser, following }: EventViewProps) {
             )}
           </div>
 
-          <TabsContent value="upcoming" className="mt-0">
-            <div className="space-y-4">
-              {filteredEvents.length > 0 ? (
-                filteredEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No upcoming events
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="created" className="mt-0">
-            <div className="space-y-4">
-              {filteredEvents.length > 0 ? (
-                filteredEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  You haven't created any events yet
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="invited" className="mt-0">
-            {pendingInvitationsCount > 0 && (
-              <div className="mb-6 p-4 bg-pink-900/20 border border-pink-800 rounded-lg flex items-center">
-                <AlertTriangle className="h-5 w-5 text-pink-400 mr-3" />
-                <div className="flex-1">
-                  <p className="text-pink-300 font-medium">
-                    You have {pendingInvitationsCount} pending invitation
-                    {pendingInvitationsCount !== 1 ? "s" : ""}
-                  </p>
-                  <p className="text-sm text-pink-200/70">
-                    Please respond to these invitations to update your schedule
-                  </p>
-                </div>
+          {activeTab === "upcoming" && (
+            <TabsContent value="upcoming" className="mt-0">
+              <div className="space-y-4">
+                {upcomingEvents.length > 0 ? (
+                  upcomingEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No upcoming events
+                  </div>
+                )}
               </div>
-            )}
+            </TabsContent>
+          )}
 
-            <div className="space-y-4">
-              {filteredEvents.length > 0 ? (
-                filteredEvents.map((event) => (
-                  <InvitationCard
-                    key={event.id}
-                    event={event}
-                    onRespond={handleInvitationResponse}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  {searchQuery || statusFilter !== "all"
-                    ? "No invitations match your search criteria"
-                    : "You haven't been invited to any events"}
+          {activeTab === "created" && (
+            <TabsContent value="created" className="mt-0">
+              <div className="space-y-4">
+                {myEvents.length > 0 ? (
+                  myEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    You haven't created any events yet
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          )}
+
+          {activeTab === "invited" && (
+            <TabsContent value="invited" className="mt-0">
+              {invitedEvents.length > 0 && (
+                <div className="mb-6 p-4 bg-pink-900/20 border border-pink-800 rounded-lg flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-pink-400 mr-3" />
+                  <div className="flex-1">
+                    <p className="text-pink-300 font-medium">
+                      You have {invitedEvents.length} pending invitation
+                      {invitedEvents.length !== 1 ? "s" : ""}
+                    </p>
+                    <p className="text-sm text-pink-200/70">
+                      Please respond to these invitations to update your schedule
+                    </p>
+                  </div>
                 </div>
               )}
-            </div>
-          </TabsContent>
+
+              <div className="space-y-4">
+                {invitedEvents.length > 0 ? (
+                  invitedEvents.map((event) => (
+                    <InvitationCard
+                      key={event.schedule.id}
+                      invitation={event}
+                      // respond={(): void => {}}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    {searchQuery || statusFilter !== "all"
+                      ? "No invitations match your search criteria"
+                      : "You haven't been invited to any events"}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </CardContent>
 
@@ -409,7 +413,31 @@ export default function EventView({ currentUser, following }: EventViewProps) {
   );
 }
 
-function EventCard(event: { event: Event }) {
+function EventCard(event: { event: Schedule }) {
+  const getTime = (time: string) => {
+    return new Date(time).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getDate = (date: string) => {
+    return new Date(date).toLocaleDateString([], {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
+  const getDuration = (start: string, end: string) => {
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+    const duration = Math.abs(endTime.getTime() - startTime.getTime());
+    const hours = Math.floor(duration / (1000 * 60 * 60));
+    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  }
+
   return (
     <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
       <div className="flex justify-between items-start">
@@ -449,11 +477,11 @@ function EventCard(event: { event: Event }) {
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="flex items-center text-sm text-gray-300">
           <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-          {event.event.date}
+          {getDate(event.event.startTime)}
         </div>
         <div className="flex items-center text-sm text-gray-300">
           <Clock className="h-4 w-4 mr-2 text-gray-500" />
-          {event.event.time} ({event.event.duration})
+          {getTime(event.event.startTime)} - {getTime(event.event.endTime)} ({getDuration(event.event.startTime, event.event.endTime)})
         </div>
         <div className="flex items-center text-sm text-gray-300 col-span-2">
           <Tag className="h-4 w-4 mr-2 text-gray-500" />
@@ -461,7 +489,7 @@ function EventCard(event: { event: Event }) {
         </div>
       </div>
 
-      {event.event.participants.length > 0 && (
+      {event.event.participants && event.event.participants.length > 0 && (
         <div className="mt-4 pt-3 border-t border-gray-800">
           <p className="text-sm text-gray-400 mb-2">Participants:</p>
           <div className="flex flex-wrap gap-2">
@@ -472,7 +500,7 @@ function EventCard(event: { event: Event }) {
               >
                 <Avatar className="h-5 w-5 mr-1">
                   <AvatarImage
-                    src={participant.avatar || "/placeholder.svg"}
+                    src={participant.profilePicture || "/placeholder.svg"}
                     alt={participant.name}
                   />
                   <AvatarFallback className="text-[10px] bg-pink-900">
@@ -506,18 +534,42 @@ function EventCard(event: { event: Event }) {
 
 // Invitation card component with accept/decline actions
 function InvitationCard({
-  event,
-  onRespond,
+  invitation,
+  // onRespond,
 }: {
-  event: Event;
-  onRespond: (id: number, status: "accepted" | "declined") => void;
+  invitation: ScheduleInvitation;
+  // onRespond: (id: number, status: "accepted" | "declined") => void;
 }) {
+  const getTime = (time: string) => {
+    return new Date(time).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getDate = (date: string) => {
+    return new Date(date).toLocaleDateString([], {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
+
+  const getDuration = (start: string, end: string) => {
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+    const duration = Math.abs(endTime.getTime() - startTime.getTime());
+    const hours = Math.floor(duration / (1000 * 60 * 60));
+    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  }
+  
   return (
     <div
       className={`p-4 bg-gray-900 rounded-lg border ${
-        event.invitationStatus === "pending"
+        invitation.status.toLowerCase() === "pending"
           ? "border-pink-800"
-          : event.invitationStatus === "accepted"
+          : invitation.status.toLowerCase() === "accepted"
           ? "border-green-800"
           : "border-gray-800"
       }`}
@@ -525,70 +577,70 @@ function InvitationCard({
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center">
-            <h3 className="font-medium text-lg text-pink-300">{event.title}</h3>
-            {event.invitationStatus === "pending" && (
+            <h3 className="font-medium text-lg text-pink-300">{invitation.schedule.title}</h3>
+            {invitation.status === "pending" && (
               <Badge className="ml-2 bg-pink-900 text-pink-100">Pending</Badge>
             )}
-            {event.invitationStatus === "accepted" && (
+            {invitation.status === "accepted" && (
               <Badge className="ml-2 bg-green-900 text-green-100">
                 Accepted
               </Badge>
             )}
-            {event.invitationStatus === "declined" && (
+            {invitation.status === "rejected" && (
               <Badge className="ml-2 bg-gray-700 text-gray-300">Declined</Badge>
             )}
           </div>
-          <p className="text-sm text-gray-400 mt-1">{event.description}</p>
+          <p className="text-sm text-gray-400 mt-1">{invitation.schedule.description}</p>
           <p className="text-xs text-gray-500 mt-1">
-            Invited by: {event.createdBy.name}
+            Invited by: {invitation.user.name}
           </p>
         </div>
         <Badge
           variant="outline"
           className={`
-            ${event.category === "work" ? "border-pink-500 text-pink-400" : ""}
+            ${invitation.schedule.category.toLowerCase() === "work" ? "border-pink-500 text-pink-400" : ""}
             ${
-              event.category === "study"
+              invitation.schedule.category.toLowerCase() === "study"
                 ? "border-purple-500 text-purple-400"
                 : ""
             }
             ${
-              event.category === "social" ? "border-blue-500 text-blue-400" : ""
+              invitation.schedule.category.toLowerCase() === "social" ? "border-blue-500 text-blue-400" : ""
             }
             capitalize
           `}
         >
-          {event.category}
+          {invitation.schedule.category}
         </Badge>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className="flex items-center text-sm text-gray-300">
           <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-          {event.date}
+          {getDate(invitation.schedule.startTime)}
         </div>
         <div className="flex items-center text-sm text-gray-300">
           <Clock className="h-4 w-4 mr-2 text-gray-500" />
-          {event.time} ({event.duration})
+          {getTime(invitation.schedule.startTime)} - {getTime(invitation.schedule.endTime)} ({getDuration(invitation.schedule.startTime, invitation.schedule.endTime)})
         </div>
         <div className="flex items-center text-sm text-gray-300 col-span-2">
           <Tag className="h-4 w-4 mr-2 text-gray-500" />
-          {event.location}
+          {invitation.schedule.location || "No specific location"}
         </div>
       </div>
 
-      {event.participants.length > 0 && (
+      {invitation.schedule.participants && invitation.schedule.participants.length > 0 && (
         <div className="mt-4 pt-3 border-t border-gray-800">
           <p className="text-sm text-gray-400 mb-2">Other Participants:</p>
           <div className="flex flex-wrap gap-2">
-            {event.participants.map((participant: Participant) => (
+            {invitation.schedule.participants.map((participant: Participant) => (
               <div
                 key={participant.id}
                 className="flex items-center bg-gray-800 rounded-full px-2 py-1"
               >
                 <Avatar className="h-5 w-5 mr-1">
                   <AvatarImage
-                    src={participant.avatar || "/placeholder.svg"}
+                    src={participant.profilePicture || "/placeholder.svg"}
                     alt={participant.name}
                   />
                   <AvatarFallback className="text-[10px] bg-pink-900">
@@ -606,7 +658,7 @@ function InvitationCard({
 
       <div className="mt-4 flex justify-between items-center">
         <div>
-          {event.invitationStatus === "pending" && (
+          {invitation.status.toLowerCase() === "pending" && (
             <p className="text-xs text-pink-300 flex items-center">
               <Bell className="h-3 w-3 mr-1" /> Please respond to this
               invitation
@@ -614,20 +666,20 @@ function InvitationCard({
           )}
         </div>
         <div className="flex space-x-2">
-          {event.invitationStatus === "pending" ? (
+          {invitation.status.toLowerCase() === "pending" ? (
             <>
               <Button
                 variant="outline"
                 size="sm"
                 className="border-red-800 hover:bg-red-900/30 text-red-300 flex items-center"
-                onClick={() => onRespond(event.id, "declined")}
+                // onClick={() => onRespond(event.id, "declined")}
               >
                 <X className="h-4 w-4 mr-1" /> Decline
               </Button>
               <Button
                 size="sm"
                 className="bg-green-700 hover:bg-green-600 text-white flex items-center"
-                onClick={() => onRespond(event.id, "accepted")}
+                // onClick={() => onRespond(event.id, "accepted")}
               >
                 <Check className="h-4 w-4 mr-1" /> Accept
               </Button>
@@ -641,7 +693,7 @@ function InvitationCard({
               >
                 View Details
               </Button>
-              {event.invitationStatus === "accepted" ? (
+              {invitation.status.toLowerCase() === "accepted" ? (
                 <Button
                   size="sm"
                   className="bg-pink-700 hover:bg-pink-600 text-white"
@@ -652,7 +704,7 @@ function InvitationCard({
                 <Button
                   size="sm"
                   className="bg-pink-700 hover:bg-pink-600 text-white"
-                  onClick={() => onRespond(event.id, "accepted")}
+                  // onClick={() => onRespond(event.id, "accepted")}
                 >
                   Accept Invitation
                 </Button>

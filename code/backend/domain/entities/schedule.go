@@ -27,4 +27,5 @@ type ScheduleParticipant struct {
 type ScheduleParticipantResponse struct {
 	Schedule Schedule `json:"schedule"`
 	User     User     `json:"user"`
+	Status   string   `json:"status"`
 }

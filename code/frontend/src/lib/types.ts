@@ -23,3 +23,9 @@ export interface Schedule {
   recurringUntil: string;
   color: string;
 }
+
+export interface ScheduleInvitation {
+  schedule: Schedule;
+  user: User;
+  status: string;
+}
