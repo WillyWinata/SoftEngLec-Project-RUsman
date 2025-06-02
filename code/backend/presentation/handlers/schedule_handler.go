@@ -97,7 +97,6 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		delta := endTime.Sub(startTime)
 
 		schedules := make([]entities.Schedule, 0)
-		schedulesParticipants := make([]entities.ScheduleParticipant, len((scheduleRequest.Participants)))
 
 		for currTime := startTime; !currTime.After(recurringUntil); currTime = currTime.AddDate(0, 0, 7) {
 			schedule := entities.Schedule{
@@ -111,6 +110,7 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 				Category:    scheduleRequest.Category,
 			}
 
+			schedulesParticipants := make([]entities.ScheduleParticipant, len((scheduleRequest.Participants)))
 			var scheduleParticipant entities.ScheduleParticipant
 
 			for _, participant := range scheduleRequest.Participants {
@@ -124,15 +124,15 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 			}
 
 			schedules = append(schedules, schedule)
+
+			if err := h.service.BatchAddParticipantsToSchedule(schedulesParticipants); err != nil {
+				log.Println(err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
 		}
 
 		if err := h.service.BatchCreateNewSchedule(schedules); err != nil {
-			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if err := h.service.BatchAddParticipantsToSchedule(schedulesParticipants); err != nil {
 			log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
