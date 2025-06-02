@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	db *gorm.DB
+	db   *gorm.DB
 	once sync.Once
-	err error
+	err  error
 )
 
 func init() {
