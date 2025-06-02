@@ -136,14 +136,21 @@ export default function EventCreationForm({
       // createdBy: currentUser.id,
     };
 
-    const newSchedule: Schedule = {
-      ...newEvent,
-      id: "",
-      userId: currentUser.id,
-      startTime: `${date}T${startTime}:00`,
-      endTime: `${date}T${endTime}:00`,
-      participants: [],
-    };
+const adjustTime = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  let adjustedHours = hours - 7;
+  if (adjustedHours < 0) adjustedHours += 24;
+  return `${adjustedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+const newSchedule: Schedule = {
+  ...newEvent,
+  id: "",
+  userId: currentUser.id,
+  startTime: `${date}T${adjustTime(startTime)}:00`,
+  endTime: `${date}T${adjustTime(endTime)}:00`,
+  participants: [],
+};
 
     createEvent(newSchedule);
 
