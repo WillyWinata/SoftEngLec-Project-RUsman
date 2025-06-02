@@ -9,6 +9,7 @@ import (
 type ScheduleService interface {
 	CreateNewSchedule(Schedule entities.Schedule) error
 	BatchCreateNewSchedule(Schedules []entities.Schedule) error
+	BatchAddParticipantsToSchedule(participants []entities.ScheduleParticipant) error
 	GetScheduleByID(id uuid.UUID) (entities.Schedule, error)
 	GetAllSchedules(userID string) ([]entities.Schedule, error)
 	UpdateSchedule(Schedule entities.Schedule) error
@@ -43,6 +44,15 @@ func (s *scheduleService) CreateNewSchedule(Schedule entities.Schedule) error {
 
 func (s *scheduleService) BatchCreateNewSchedule(Schedules []entities.Schedule) error {
 	err := s.repo.BatchCreateNewSchedule(Schedules)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *scheduleService) BatchAddParticipantsToSchedule(participants []entities.ScheduleParticipant) error {
+	err := s.repo.BatchAddParticipantsToSchedule(participants)
 	if err != nil {
 		return err
 	}

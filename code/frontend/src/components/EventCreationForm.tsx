@@ -339,8 +339,8 @@ export default function EventCreationForm({
                   </Label>
                   <Input
                     id="customLocation"
-                    value={customLocation}
-                    onChange={(e) => setCustomLocation(e.target.value)}
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     placeholder="Enter location"
                     className="bg-gray-800 border-gray-700 text-gray-100"
                   />
