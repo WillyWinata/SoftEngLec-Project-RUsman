@@ -19,6 +19,7 @@ import { Checkbox } from "./ui/checkbox";
 export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,7 +37,7 @@ export function RegisterForm() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error when user types
+    // Hapus error ketika user mulai mengetik ulang
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -84,14 +85,14 @@ export function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // Here you would implement your registration logic
-      // For example:
+      // Implementasikan logika registrasi di sini
+      // Contoh:
       // await createUser({ name: formData.name, email: formData.email, password: formData.password })
 
-      // Simulate API call
+      // Simulasi pemanggilan API
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Redirect after successful registration
+      // Redirect setelah registrasi berhasil
       // router.push('/login')
 
       console.log("Registration successful", formData);
@@ -208,7 +209,7 @@ export function RegisterForm() {
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
-                type={showPassword ? "text" : "password"}
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -216,36 +217,32 @@ export function RegisterForm() {
                   errors.confirmPassword ? "border-red-500" : ""
                 }`}
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-pink-400 hover:text-pink-300"
+                onClick={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
+              >
+                {showConfirmPassword ? (
+                  <EyeOffIcon className="h-5 w-5" />
+                ) : (
+                  <EyeIcon className="h-5 w-5" />
+                )}
+                <span className="sr-only">
+                  {showConfirmPassword
+                    ? "Hide confirm password"
+                    : "Show confirm password"}
+                </span>
+              </Button>
             </div>
             {errors.confirmPassword && (
               <p className="text-red-400 text-sm mt-1">
                 {errors.confirmPassword}
               </p>
             )}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms"
-              className="h-4 w-4 rounded border-pink-700 bg-gray-800 text-pink-600 focus:ring-pink-500"
-              required
-            />
-            <Label htmlFor="terms" className="text-sm text-pink-300">
-              I agree to the{" "}
-              <a
-                href="#"
-                className="text-pink-400 hover:text-pink-300 underline underline-offset-4"
-              >
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a
-                href="#"
-                className="text-pink-400 hover:text-pink-300 underline underline-offset-4"
-              >
-                Privacy Policy
-              </a>
-            </Label>
           </div>
 
           <Button

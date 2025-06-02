@@ -11,18 +11,6 @@ export default function RegisterPage() {
         </div>
 
         <RegisterForm />
-
-        <div className="text-center mt-6">
-          <p className="text-pink-300">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-medium text-pink-400 hover:text-pink-300 underline underline-offset-4"
-            >
-              Login
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );
