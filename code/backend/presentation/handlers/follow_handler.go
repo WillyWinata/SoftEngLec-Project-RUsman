@@ -58,9 +58,7 @@ func (h *followHandler) GetFollowsByUser(c *gin.Context) {
 
 	var userId FollowID
 
-	var Follow entities.Follow
-
-	if err := c.ShouldBindJSON(&Follow); err != nil {
+	if err := c.ShouldBindJSON(&userId); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
