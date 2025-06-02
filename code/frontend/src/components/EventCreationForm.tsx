@@ -124,6 +124,7 @@ export default function EventCreationForm({
       category,
       location: location === "Other" ? customLocation : location,
       participants: selectedParticipants,
+      recurringUntil: isRecurring ? recurringEndDate : "",
       // isRecurring,
       // recurringPattern: isRecurring ? recurringPattern : null,
       // recurringDays: isRecurring ? recurringDays : [],
@@ -137,7 +138,6 @@ export default function EventCreationForm({
       ...newEvent,
       id: "",
       userId: currentUser.id,
-      color: "#10b981",
       startTime: `${date}T${startTime}:00`,
       endTime: `${date}T${endTime}:00`,
       participants: [],
@@ -370,7 +370,7 @@ export default function EventCreationForm({
                           <div className="flex items-center space-x-2 flex-1">
                             <Avatar className="h-8 w-8">
                               <AvatarImage
-                                src={person.avatar || "/placeholder.svg"}
+                                src={person.profilePicture || "/placeholder.svg"}
                                 alt={person.name}
                               />
                               <AvatarFallback className="bg-pink-900">
@@ -385,7 +385,7 @@ export default function EventCreationForm({
                                 {person.name}
                               </Label>
                               <div className="text-xs text-gray-500">
-                                {person.department}
+                                {person.major}
                               </div>
                             </div>
                           </div>
@@ -422,7 +422,7 @@ export default function EventCreationForm({
                         >
                           <Avatar className="h-5 w-5 mr-1">
                             <AvatarImage
-                              src={person.avatar || "/placeholder.svg"}
+                              src={person.profilePicture || "/placeholder.svg"}
                               alt={person.name}
                             />
                             <AvatarFallback className="text-[10px] bg-pink-900">
@@ -514,7 +514,7 @@ export default function EventCreationForm({
 
                 {isRecurring && (
                   <div className="space-y-4 pl-6 border-l-2 border-gray-800">
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label
                         htmlFor="recurringPattern"
                         className="text-gray-200"
@@ -566,9 +566,9 @@ export default function EventCreationForm({
                           </Label>
                         </div>
                       </RadioGroup>
-                    </div>
+                    </div> */}
 
-                    {recurringPattern === "weekly" && (
+                    {/* {recurringPattern === "weekly" && (
                       <div className="space-y-2">
                         <Label className="text-gray-200">Repeat on</Label>
                         <div className="flex flex-wrap gap-2">
@@ -596,7 +596,7 @@ export default function EventCreationForm({
                           ))}
                         </div>
                       </div>
-                    )}
+                    )} */}
 
                     <div className="space-y-2">
                       <Label

@@ -20,5 +20,5 @@ export interface Schedule {
   location: string;
   category: string;
   participants: User[];
-  color: string;
+  recurringUntil: string;
 }
