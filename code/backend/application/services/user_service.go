@@ -132,7 +132,7 @@ func (s *userService) GetFollowingPendingRequestsByUser(userId uuid.UUID) ([]ent
 
 	var f []entities.User
 	for _, pending := range followingPending {
-		user, err := s.repo.FindUser(pending.Requestee)
+		user, err := s.repo.FindUser(pending.RequesteeId)
 		if err != nil {
 			return nil, err
 		}

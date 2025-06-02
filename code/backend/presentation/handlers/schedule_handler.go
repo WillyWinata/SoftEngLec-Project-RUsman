@@ -57,7 +57,6 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		Location     string          `json:"location"`
 		Category     string          `json:"category"`
 		Participants []entities.User `json:"participants"`
-		Color        string          `json:"color"`
 	}
 
 	var scheduleRequest ScheduleRequest
@@ -92,7 +91,6 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		Type:        scheduleRequest.Type,
 		Location:    scheduleRequest.Location,
 		Category:    scheduleRequest.Category,
-		Color:       scheduleRequest.Color,
 	}
 
 	if err := h.service.CreateNewSchedule(schedule); err != nil {

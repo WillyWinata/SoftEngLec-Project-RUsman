@@ -17,7 +17,6 @@ type Schedule struct {
 	Type        string    `gorm:"not null" json:"type"`
 	Location    string    `gorm:"not null" json:"location"`
 	Category    string    `gorm:"not null" json:"category"`
-	Color       string    `gorm:"not null" json:"color"`
 }
 
 type ScheduleParticipant struct {
