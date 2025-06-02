@@ -94,7 +94,7 @@ func (s *userService) GetFollowersByUser(userId uuid.UUID) ([]entities.User, err
 
 	var f []entities.User
 	for _, follower := range followers {
-		user, err := s.repo.FindUser(follower.Following)
+		user, err := s.repo.FindUser(follower.FollowingId)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (s *userService) GetFollowingByUser(userId uuid.UUID) ([]entities.User, err
 
 	var f []entities.User
 	for _, follow := range following {
-		user, err := s.repo.FindUser(follow.User)
+		user, err := s.repo.FindUser(follow.UserId)
 		if err != nil {
 			return nil, err
 		}

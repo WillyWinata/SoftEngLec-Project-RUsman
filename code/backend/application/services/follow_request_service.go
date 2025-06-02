@@ -64,8 +64,8 @@ func (s *followRequestService) AcceptFollowRequest(requestId uuid.UUID) error {
 
 	follow := entities.Follow{
 		Id:        uuid.New(),
-		User:      request.User,
-		Following: request.Requestee,
+		UserId:      request.User,
+		FollowingId: request.Requestee,
 	}
 
 	err = s.followService.Follow(follow)

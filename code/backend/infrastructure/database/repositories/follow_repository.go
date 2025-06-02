@@ -42,7 +42,7 @@ func (r *followRepository) DeleteFollow(model entities.Follow) error {
 func (r *followRepository) GetFollowByUserAndFollower(userId uuid.UUID, followerId uuid.UUID) (entities.Follow, error) {
 	var entity entities.Follow
 
-	err := r.db.Where("user_id = ?", userId).Where("follower_id = ?", followerId).First(entity).Error
+	err := r.db.Where("user_id = ?", userId).Where("following_id = ?", followerId).First(entity).Error
 
 	return entity, err
 }
@@ -50,7 +50,7 @@ func (r *followRepository) GetFollowByUserAndFollower(userId uuid.UUID, follower
 func (r *followRepository) GetFollowingByUser(userId uuid.UUID) ([]entities.Follow, error) {
 	var entity []entities.Follow
 
-	err := r.db.Where("follower_id = ?", userId).Find(&entity).Error
+	err := r.db.Where("following_id = ?", userId).Find(&entity).Error
 	return entity, err
 }
 
