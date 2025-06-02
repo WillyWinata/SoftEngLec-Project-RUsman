@@ -86,7 +86,6 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		EndTime:     endTime,
 		Title:       scheduleRequest.Title,
 		Description: scheduleRequest.Description,
-		Type:        scheduleRequest.Type,
 		Location:    scheduleRequest.Location,
 		Category:    scheduleRequest.Category,
 	}
