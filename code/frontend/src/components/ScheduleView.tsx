@@ -178,29 +178,37 @@ export default function ScheduleView({
   // Get events for a specific day and time slot (for week view)
   // const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  const getEventsForTimeSlot = (day: string, timeSlot: string, schedules: Schedule[]) => {
+  const getEventsForTimeSlot = (
+    day: string,
+    timeSlot: string,
+    schedules: Schedule[]
+  ) => {
     // Convert timeSlot (HH:MM) to hours and minutes
-    const [slotHours, slotMinutes] = timeSlot.split(':').map(Number);
+    const [slotHours, slotMinutes] = timeSlot.split(":").map(Number);
     const slotTotalMinutes = slotHours * 60 + slotMinutes;
-    
+
     return schedules.filter((event) => {
       // Check if event occurs on the specified day
       const eventDay = DAYS_OF_WEEK[new Date(event.startTime).getDay()];
       if (eventDay !== day) return false;
-      
+
       const startTime = new Date(event.startTime);
       const endTime = new Date(event.endTime);
       // Get start and end times in minutes since midnight
-      const startTotalMinutes = startTime.getHours() * 60 + startTime.getMinutes();
+      const startTotalMinutes =
+        startTime.getHours() * 60 + startTime.getMinutes();
       let endTotalMinutes = endTime.getHours() * 60 + endTime.getMinutes();
-      
+
       // Handle overnight events (endTime is next day)
       if (endTotalMinutes < startTotalMinutes) {
         endTotalMinutes += 24 * 60; // Add 24 hours
       }
-      
+
       // Check if time slot falls within the event duration
-      return slotTotalMinutes >= startTotalMinutes && slotTotalMinutes < endTotalMinutes;
+      return (
+        slotTotalMinutes >= startTotalMinutes &&
+        slotTotalMinutes < endTotalMinutes
+      );
     });
   };
 
@@ -210,26 +218,27 @@ export default function ScheduleView({
     const targetYear = date.getFullYear();
     const targetMonth = date.getMonth();
     const targetDay = date.getDate();
-  
+
     return schedules.flatMap((schedule) => {
       const eventStart = new Date(schedule.startTime);
       const eventEnd = new Date(schedule.endTime);
-  
+
       // Check if the event overlaps with the target day
-      const startsOnDay = 
+      const startsOnDay =
         eventStart.getFullYear() === targetYear &&
         eventStart.getMonth() === targetMonth &&
         eventStart.getDate() === targetDay;
-  
-      const endsOnDay = 
+
+      const endsOnDay =
         eventEnd.getFullYear() === targetYear &&
         eventEnd.getMonth() === targetMonth &&
         eventEnd.getDate() === targetDay;
-  
+
       // For multi-day events, check if target day is between start and end
       const spansDay =
-        eventStart < date && eventEnd > new Date(date.getTime() + 24 * 60 * 60 * 1000);
-  
+        eventStart < date &&
+        eventEnd > new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
       if (startsOnDay || endsOnDay || spansDay) {
         return {
           ...schedule,
@@ -241,13 +250,19 @@ export default function ScheduleView({
 
   // Get events for the selected day (for day view)
   const getEventsForSelectedDay = (
-    currentDate: Date, 
+    currentDate: Date,
     schedules: Schedule[] // Using your exact Schedule type
   ) => {
-    const dayName = FULL_DAYS[currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1];
-    
-    return schedules.filter(schedule => {
-      const eventDay = DAYS_OF_WEEK[new Date(schedule.startTime).getDay() === 0 ? 6 : new Date(schedule.startTime).getDay() - 1];
+    const dayName =
+      FULL_DAYS[currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1];
+
+    return schedules.filter((schedule) => {
+      const eventDay =
+        DAYS_OF_WEEK[
+          new Date(schedule.startTime).getDay() === 0
+            ? 6
+            : new Date(schedule.startTime).getDay() - 1
+        ];
       return eventDay === dayName;
     });
   };
@@ -464,7 +479,11 @@ export default function ScheduleView({
                   {DAYS_OF_WEEK.map((day, dayIndex) => (
                     <div key={day} className="col-span-1">
                       {TIME_SLOTS.map((time) => {
-                        const events = getEventsForTimeSlot(day, time, schedules);
+                        const events = getEventsForTimeSlot(
+                          day,
+                          time,
+                          schedules
+                        );
                         const dayDate = addDays(
                           startOfWeek(currentDate, { weekStartsOn: 1 }),
                           dayIndex
@@ -719,12 +738,10 @@ export default function ScheduleView({
 
   return (
     <div className="flex-1 p-4 overflow-auto">
-      <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl">
-        <CardHeader className="bg-gray-900 border-b border-gray-800 p-4">
+      <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
+        <CardHeader className="border-b border-gray-800 p-4 pt-0">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-pink-400">
-              Schedule Dashboard
-            </h1>
+            <h1 className="text-pink-400 text-2xl font-bold tracking-wide">Schedule Dashboard</h1>
             <Button
               className="bg-pink-700 hover:bg-pink-600 text-white"
               size="sm"
@@ -853,22 +870,26 @@ export default function ScheduleView({
 
           {/* Legend, Common Free Time, and Group Work Recommendations */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-t border-gray-800">
-            <ScheduleLegend schedules={[{userId: currentUser.id, user: currentUser, events: schedules}]} />
+            <ScheduleLegend
+              schedules={[
+                {
+                  userId: currentUser.id,
+                  user: currentUser,
+                  events: schedules,
+                },
+              ]}
+            />
             {selectedFriends.length > 0 && (
               <>
                 <CommonFreeTime
-                  userSchedule={[
-                    schedules[0]
-                  ]}
+                  userSchedule={[schedules[0]]}
                   friendSchedules={schedules.filter(
                     (s) => s.userId !== "user-1"
                   )}
                   selectedFriends={selectedFriends}
                 />
                 <GroupWorkRecommendations
-                  userSchedule={
-                    schedules
-                  }
+                  userSchedule={schedules}
                   friendSchedules={schedules.filter(
                     (s) => s.userId !== "user-1"
                   )}

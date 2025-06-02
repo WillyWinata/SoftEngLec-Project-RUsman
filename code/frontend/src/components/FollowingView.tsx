@@ -102,7 +102,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
   return (
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
       <CardHeader className="border-b border-gray-800">
-        <CardTitle className="text-pink-400 text-2xl">
+        <CardTitle className="text-pink-400 text-2xl font-bold tracking-wide">
           Student Connections
         </CardTitle>
       </CardHeader>

@@ -1,8 +1,11 @@
 package migrations
 
 import (
+	"log"
+
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/domain/entities"
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/infrastructure/database"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -27,15 +30,19 @@ func (c *followMigration) MigrateFollow() {
 }
 
 func (c *followMigration) SeedFollow() {
-	// seeds := []entities.Follow{
-	// 	{Id: 1},
-	// }
+	seeds := []entities.Follow{
+		{
+			Id:          uuid.New(),
+			UserId:      uuid.Nil,
+			FollowingId: uuid.Nil,
+		},
+	}
 
-	// for _, element := range seeds {
-	// 	result := c.db.Create(element)
+	for _, element := range seeds {
+		result := c.db.Create(element)
 
-	// 	if result.Error != nil {
-	// 		log.Fatalf("Error Seeder: %s", result.Error)
-	// 	}
-	// }
+		if result.Error != nil {
+			log.Fatalf("Error Seeder: %s", result.Error)
+		}
+	}
 }

@@ -237,10 +237,10 @@ export default function EventView({ currentUser, following }: EventViewProps) {
   ).length;
 
   return (
-    <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl">
-      <CardHeader className="bg-gray-900 border-b border-gray-800">
+    <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
+      <CardHeader className="border-b border-gray-800">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-pink-400">Events</CardTitle>
+          <CardTitle className="text-pink-400 text-2xl font-bold tracking-wide">Events</CardTitle>
           <Button
             className="bg-pink-700 hover:bg-pink-600 text-white"
             onClick={() => setShowEventForm(true)}

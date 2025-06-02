@@ -253,11 +253,11 @@ export default function EventCreationForm({
                 className="data-[state=active]:bg-pink-900 data-[state=active]:text-white"
               >
                 <Clock className="h-4 w-4 mr-2" />
-                Schedule & Reminders
+                Schedule
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="details" className="space-y-4">
+            <TabsContent value="details" className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-gray-200">
                   Event Title*
@@ -285,51 +285,53 @@ export default function EventCreationForm({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="category" className="text-gray-200">
-                  Category
-                </Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-100">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="study" className="text-pink-300">
-                      Study
-                    </SelectItem>
-                    <SelectItem value="work" className="text-pink-300">
-                      Work
-                    </SelectItem>
-                    <SelectItem value="social" className="text-pink-300">
-                      Social
-                    </SelectItem>
-                    <SelectItem value="personal" className="text-pink-300">
-                      Personal
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-gray-200">
-                  Location
-                </Label>
-                <Select value={location} onValueChange={setLocation}>
-                  <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-100">
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 max-h-[200px]">
-                    {LOCATIONS.map((loc) => (
-                      <SelectItem
-                        key={loc}
-                        value={loc}
-                        className="text-pink-300"
-                      >
-                        {loc}
+              <div className="flex flex-row space-x-5">
+                <div className="space-y-2">
+                  <Label htmlFor="category" className="text-gray-200">
+                    Category
+                  </Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-100">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700">
+                      <SelectItem value="study" className="text-pink-300">
+                        Study
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      <SelectItem value="work" className="text-pink-300">
+                        Work
+                      </SelectItem>
+                      <SelectItem value="social" className="text-pink-300">
+                        Social
+                      </SelectItem>
+                      <SelectItem value="personal" className="text-pink-300">
+                        Personal
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-gray-200">
+                    Location
+                  </Label>
+                  <Select value={location} onValueChange={setLocation}>
+                    <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-100">
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700 max-h-[200px]">
+                      {LOCATIONS.map((loc) => (
+                        <SelectItem
+                          key={loc}
+                          value={loc}
+                          className="text-pink-300"
+                        >
+                          {loc}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {location === "Other" && (
@@ -346,23 +348,6 @@ export default function EventCreationForm({
                   />
                 </div>
               )}
-
-              <div className="flex items-center space-x-2 pt-2">
-                <Checkbox
-                  id="isPrivate"
-                  checked={isPrivate}
-                  onCheckedChange={(checked) =>
-                    setIsPrivate(checked as boolean)
-                  }
-                  className="border-gray-600 data-[state=checked]:bg-pink-600"
-                />
-                <Label
-                  htmlFor="isPrivate"
-                  className="text-sm text-gray-300 cursor-pointer"
-                >
-                  Make this event private (only visible to invited participants)
-                </Label>
-              </div>
             </TabsContent>
 
             <TabsContent value="participants" className="space-y-4">
@@ -631,36 +616,10 @@ export default function EventCreationForm({
                   </div>
                 )}
               </div>
-
-              <div className="space-y-2 pt-4">
-                <Label className="text-gray-200">Reminders</Label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "10min", label: "10 minutes before" },
-                    { value: "30min", label: "30 minutes before" },
-                    { value: "1hour", label: "1 hour before" },
-                    { value: "1day", label: "1 day before" },
-                  ].map((reminder) => (
-                    <div
-                      key={reminder.value}
-                      onClick={() => toggleReminder(reminder.value)}
-                      className={cn(
-                        "cursor-pointer rounded-full px-3 py-1 text-xs font-medium",
-                        reminders.includes(reminder.value)
-                          ? "bg-pink-900 text-pink-100"
-                          : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                      )}
-                    >
-                      {reminder.label}
-                    </div>
-                  ))}
-                </div>
-              </div>
             </TabsContent>
           </Tabs>
 
           <DialogFooter className="flex justify-between items-center pt-4 border-t border-gray-800">
-            <div className="text-xs text-gray-500">* Required fields</div>
             <div className="flex space-x-2">
               <Button
                 type="button"
