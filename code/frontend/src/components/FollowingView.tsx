@@ -24,29 +24,14 @@ export default function FollowingView({ following }: FollowingViewProps) {
   const [followingList, setFollowingList] = useState(following);
 
   const [discoverableStudents, setDiscoverableStudents] = useState<User[]>([]);
-  const [userFollowers, setUserFollowers] = useState<User[]>();
-  const [userFollowings, setUserFollowings] = useState<User[]>();
-  const [userFollowingPendings, setUserFollowingPendings] = useState<User[]>();
+  const [userFollowers, setUserFollowers] = useState<User[]>([]);
+  const [userFollowings, setUserFollowings] = useState<User[]>([]);
+  const [userFollowingPendings, setUserFollowingPendings] = useState<User[]>(
+    []
+  );
 
   const [major, setMajor] = useState("All Majors");
   const [majors, setMajors] = useState<string[]>([]);
-  const user = localStorage.getItem("user");
-  const userId = user ? JSON.parse(user).id : null;
-
-  const getAllFollowedUsers = async () => {
-    const response = await fetch(
-      "http://localhost:8888/get-user-follow/" + userId,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const result = await response.json();
-    setFollowingList(result);
-  };
 
   const getAllAvailableUsers = async () => {
     const response = await fetch("http://localhost:8888/get-users", {
@@ -69,7 +54,6 @@ export default function FollowingView({ following }: FollowingViewProps) {
 
   useEffect(() => {
     getAllAvailableUsers();
-    getAllFollowedUsers();
   }, []);
 
   // Handle follow/unfollow action
@@ -118,7 +102,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
   return (
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
       <CardHeader className="border-b border-gray-800">
-        <CardTitle className="text-pink-400 text-2xl">
+        <CardTitle className="text-pink-400 text-2xl font-bold tracking-wide">
           Student Connections
         </CardTitle>
       </CardHeader>

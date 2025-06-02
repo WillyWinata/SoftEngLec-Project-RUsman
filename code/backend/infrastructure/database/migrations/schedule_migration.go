@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"log"
+	"time"
 
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/domain/entities"
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/infrastructure/database"
@@ -31,7 +32,16 @@ func (c *scheduleMigration) MigrateSchedule() {
 
 func (c *scheduleMigration) SeedSchedule() {
 	seeds := []entities.Schedule{
-		{Id: uuid.New()},
+		{
+			Id: uuid.New(),
+			UserId: uuid.Nil,
+			StartTime: time.Time{},
+			EndTime: time.Time{},
+			Title: "Assignment 1",
+			Description: "Kelarin SOftwng",
+			Location: "Online",
+			Category: "Project",
+		},
 	}
 
 	for _, element := range seeds {
