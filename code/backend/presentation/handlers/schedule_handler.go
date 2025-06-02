@@ -110,26 +110,29 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 				Category:    scheduleRequest.Category,
 			}
 
-			schedulesParticipants := make([]entities.ScheduleParticipant, len((scheduleRequest.Participants)))
-			var scheduleParticipant entities.ScheduleParticipant
+			if len(scheduleRequest.Participants) > 0 {
+				schedulesParticipants := make([]entities.ScheduleParticipant, len((scheduleRequest.Participants)))
+				var scheduleParticipant entities.ScheduleParticipant
 
-			for _, participant := range scheduleRequest.Participants {
-				scheduleParticipant = entities.ScheduleParticipant{
-					Id:         uuid.New(),
-					ScheduleId: schedule.Id,
-					UserId:     participant.Id,
+				for _, participant := range scheduleRequest.Participants {
+					scheduleParticipant = entities.ScheduleParticipant{
+						Id:         uuid.New(),
+						ScheduleId: schedule.Id,
+						UserId:     participant.Id,
+					}
+
+					schedulesParticipants = append(schedulesParticipants, scheduleParticipant)
 				}
 
-				schedulesParticipants = append(schedulesParticipants, scheduleParticipant)
+				if err := h.service.BatchAddParticipantsToSchedule(schedulesParticipants); err != nil {
+					log.Println(err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
 			}
 
 			schedules = append(schedules, schedule)
 
-			if err := h.service.BatchAddParticipantsToSchedule(schedulesParticipants); err != nil {
-				log.Println(err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
 		}
 
 		if err := h.service.BatchCreateNewSchedule(schedules); err != nil {
@@ -153,30 +156,32 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		Category:    scheduleRequest.Category,
 	}
 
-	scheduleParticipants := make([]entities.ScheduleParticipant, len(scheduleRequest.Participants))
-
-	var scheduleParticipant entities.ScheduleParticipant
-
-	for _, participant := range scheduleRequest.Participants {
-		scheduleParticipant = entities.ScheduleParticipant{
-			Id:         uuid.New(),
-			ScheduleId: schedule.Id,
-			UserId:     participant.Id,
-		}
-
-		scheduleParticipants = append(scheduleParticipants, scheduleParticipant)
-	}
-
 	if err := h.service.CreateNewSchedule(schedule); err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.service.BatchAddParticipantsToSchedule(scheduleParticipants); err != nil {
-		log.Println(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	if len(scheduleRequest.Participants) == 0 {
+		scheduleParticipants := make([]entities.ScheduleParticipant, len(scheduleRequest.Participants))
+
+		var scheduleParticipant entities.ScheduleParticipant
+
+		for _, participant := range scheduleRequest.Participants {
+			scheduleParticipant = entities.ScheduleParticipant{
+				Id:         uuid.New(),
+				ScheduleId: schedule.Id,
+				UserId:     participant.Id,
+			}
+
+			scheduleParticipants = append(scheduleParticipants, scheduleParticipant)
+		}
+
+		if err := h.service.BatchAddParticipantsToSchedule(scheduleParticipants); err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Schedule created"})
