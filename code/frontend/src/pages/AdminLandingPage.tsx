@@ -1,8 +1,17 @@
 import { UserRegistration } from "@/components/UserRegistration";
 import { UserDeactivation } from "@/components/UserDeactivation";
 import { Users, UserX, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminLandingPage() {
+  const user = localStorage.getItem("user");
+  const userRole = user ? JSON.parse(user).role : null;
+  const navigate = useNavigate();
+
+  if (userRole !== "Admin") {
+    navigate("/");
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-tl from-pink-900 to-black">
       {/* Header */}

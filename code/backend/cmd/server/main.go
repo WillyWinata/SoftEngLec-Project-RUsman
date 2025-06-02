@@ -14,6 +14,7 @@ func initialize() {
 
 	scheduleMigration := migrations.NewScheduleMigration()
 	scheduleMigration.MigrateSchedule()
+	scheduleMigration.SeedSchedule()
 
 	followMigration := migrations.NewFollowMigration()
 	followMigration.MigrateFollow()

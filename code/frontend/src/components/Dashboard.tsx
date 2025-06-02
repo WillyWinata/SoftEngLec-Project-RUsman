@@ -67,6 +67,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     const user = localStorage.getItem("user");
+    
+
     if (user) {
       setIsLoading(false);
       setCurrentUser(JSON.parse(user));
@@ -89,7 +91,31 @@ export default function Dashboard() {
         }),
       });
       const data = await response.json();
-      setSchedules(data);
+      const coloredSchedules = data.map((s: Schedule) => {
+        let color = "#CCCCCC"; // default color
+
+        switch (s.category) {
+          case "Work":
+            color = "#54DAFF";
+            break;
+          case "Study":
+            color = "#FFFF00";
+            break;
+          case "Personal":
+            color = "#00FF00";
+            break;
+          case "Social":
+            color = "#D53716";
+            break;
+        }
+
+        return {
+          ...s,
+          color,
+        };
+      });
+
+      setSchedules(coloredSchedules);
     };
 
     getSchedules();

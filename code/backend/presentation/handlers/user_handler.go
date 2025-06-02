@@ -81,13 +81,23 @@ func (h *userHandler) Login(c *gin.Context) {
 func (h *userHandler) Get(c *gin.Context) {
 	id := c.Param("id")
 
-	User, err := h.service.GetUserByID(id)
+	user, err := h.service.GetUserByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, User)
+	userResponse := &entities.UserFrontendResponse{
+		Id:             user.Id.String(),
+		Name:           user.Name,
+		StudentId:      user.StudentId,
+		Role:           user.Role,
+		Major:          user.Major,
+		ProfilePicture: user.ProfilePicture,
+		IsActive:       user.IsActive,
+	}
+
+	c.JSON(http.StatusOK, userResponse)
 }
 
 func (h *userHandler) GetAll(c *gin.Context) {

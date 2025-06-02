@@ -20,3 +20,13 @@ type UserFollowResponse struct {
 	Following        []User `json:"following"`
 	FollowingPending []User `json:"followingPending"`
 }
+
+type UserFrontendResponse struct {
+	Id             string `json:"id"`
+	Name           string `json:"name"`
+	StudentId      string `json:"studentId"`
+	Role           string `json:"role"`
+	Major          string `json:"major"`
+	ProfilePicture string `json:"profilePicture"`
+	IsActive       bool   `json:"isActive"`
+}

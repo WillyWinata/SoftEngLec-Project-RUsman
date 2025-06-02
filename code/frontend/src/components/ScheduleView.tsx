@@ -450,13 +450,11 @@ export default function ScheduleView({
               </div>
             </div>
 
-            {/* Scrollable time grid */}
             <div
               ref={weekScrollRef}
               className="overflow-y-auto max-h-[calc(100vh-370px)]"
             >
               <div className="flex">
-                {/* Time labels column - fixed position */}
                 <div className="w-16 bg-gray-900 border-r border-gray-800 flex-shrink-0 sticky left-0 z-10">
                   {TIME_SLOTS.map((time) => (
                     <div
@@ -516,10 +514,6 @@ export default function ScheduleView({
                                 className="absolute inset-0.5 rounded overflow-hidden flex flex-col"
                                 style={{ backgroundColor: event.color + "33" }} // Add transparency
                               >
-                                <div
-                                  className="h-1 w-full"
-                                  style={{ backgroundColor: event.color }}
-                                ></div>
                                 <div className="p-1 text-xs">
                                   <div
                                     className="font-medium"
@@ -737,7 +731,9 @@ export default function ScheduleView({
       <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
         <CardHeader className="border-b border-gray-800 p-4 pt-0">
           <div className="flex items-center justify-between">
-            <h1 className="text-pink-400 text-2xl font-bold tracking-wide">Schedule Dashboard</h1>
+            <h1 className="text-pink-400 text-2xl font-bold tracking-wide">
+              Schedule Dashboard
+            </h1>
             <Button
               className="bg-pink-700 hover:bg-pink-600 text-white"
               size="sm"

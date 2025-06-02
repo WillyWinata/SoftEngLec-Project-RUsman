@@ -82,7 +82,11 @@ export function LoginForm() {
 
       if (result.id != null) {
         console.log("Login successful", formData);
-        navigate("/home");
+        if (result.role === "User") {
+          navigate("/home");
+        } else if (result.role === "Admin") {
+          navigate("/admin");
+        }
       }
     } catch (error) {
       console.error("Login failed", error);

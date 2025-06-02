@@ -28,7 +28,9 @@ export default function Sidebar({
   return (
     <div className=" fixed top-0 left-0 w-64 bg-gray-900 text-white min-h-screen p-4 border-r border-gray-800">
       <div className="mb-8 p-2">
-        <h1 className="text-4xl tracking-widest font-bold text-pink-400">RUsman</h1>
+        <h1 className="text-4xl tracking-widest font-bold text-pink-400">
+          RUsman
+        </h1>
       </div>
 
       <nav className="space-y-1 mb-6">
@@ -84,7 +86,7 @@ export default function Sidebar({
                 <div className="flex items-center space-x-2">
                   <div className="w-6 h-6 rounded-full bg-gray-700 overflow-hidden">
                     <img
-                      src={friend.avatar || "/placeholder.svg"}
+                      src={friend.profilePicture}
                       alt={friend.name}
                       className="w-full h-full object-cover"
                     />
@@ -94,9 +96,7 @@ export default function Sidebar({
                     className="text-sm text-gray-300 cursor-pointer"
                   >
                     {friend.name}
-                    <div className="text-xs text-gray-500">
-                      {friend.department}
-                    </div>
+                    <div className="text-xs text-gray-500">{friend.major}</div>
                   </Label>
                 </div>
               </div>
@@ -111,14 +111,14 @@ export default function Sidebar({
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
             <img
-              src={currentUser.avatar || "/placeholder.svg"}
+              src={currentUser.profilePicture}
               alt={currentUser.name}
               className="w-full h-full object-cover"
             />
           </div>
           <div>
             <p className="font-medium">{currentUser.name}</p>
-            <p className="text-sm text-gray-400">{currentUser.email}</p>
+            <p className="text-sm text-gray-400">{currentUser.studentId}</p>
           </div>
         </div>
       </div>
