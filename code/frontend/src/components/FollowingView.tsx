@@ -19,22 +19,13 @@ interface FollowingViewProps {
   following: User[];
 }
 
-// Departments for filtering
-const DEPARTMENTS = [
-  "All Departments",
-  "Computer Science",
-  "Information Systems",
-  "Data Science",
-  "Software Engineering",
-  "Business",
-];
-
 export default function FollowingView({ following }: FollowingViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [department, setDepartment] = useState("All Departments");
+  const [department, setDepartment] = useState("All Majors");
   const [discoverableStudents, setDiscoverableStudents] = useState<User[]>([]);
   const [followingList, setFollowingList] = useState(following);
 
+  const [majors, setMajors] = useState<string[]>([]);
   const user = localStorage.getItem("user");
   const userId = user ? JSON.parse(user).id : null;
 
@@ -60,8 +51,14 @@ export default function FollowingView({ following }: FollowingViewProps) {
     });
 
     const result = await response.json();
-    console.log(result)
     setDiscoverableStudents(result);
+
+    const uniqueMajors = new Set<string>(
+      result.map((user: User) => user.major)
+    );
+
+    setMajors(["All Majors", ...Array.from(uniqueMajors)]);
+    console.log(Array.from(uniqueMajors));
   };
 
   useEffect(() => {
@@ -69,32 +66,32 @@ export default function FollowingView({ following }: FollowingViewProps) {
   }, []);
 
   // Handle follow/unfollow action
-  const handleFollowToggle = (studentId: string, isDiscoverable = false) => {
-    if (isDiscoverable) {
-      // Find the student in the discoverable list
-      const student = discoverableStudents.find((s) => s.id === studentId);
-      if (student) {
-        // Add to following list
-        setFollowingList([
-          ...followingList,
-          { ...student, mutualFollow: false },
-        ]);
-        // Remove from discoverable list
-        setDiscoverableStudents(
-          discoverableStudents.filter((s) => s.id !== studentId)
-        );
-      }
-    } else {
-      // Toggle follow status in the following list
-      setFollowingList(
-        followingList.map((student) =>
-          student.id === studentId
-            ? { ...student, mutualFollow: !student.mutualFollow }
-            : student
-        )
-      );
-    }
-  };
+  // const handleFollowToggle = (studentId: string, isDiscoverable = false) => {
+  //   if (isDiscoverable) {
+  //     // Find the student in the discoverable list
+  //     const student = discoverableStudents.find((s) => s.id === studentId);
+  //     if (student) {
+  //       // Add to following list
+  //       setFollowingList([
+  //         ...followingList,
+  //         { ...student, mutualFollow: false },
+  //       ]);
+  //       // Remove from discoverable list
+  //       setDiscoverableStudents(
+  //         discoverableStudents.filter((s) => s.id !== studentId)
+  //       );
+  //     }
+  //   } else {
+  //     // Toggle follow status in the following list
+  //     setFollowingList(
+  //       followingList.map((student) =>
+  //         student.id === studentId
+  //           ? { ...student, mutualFollow: !student.mutualFollow }
+  //           : student
+  //       )
+  //     );
+  //   }
+  // };
 
   // Filter students based on search query and department
   const filterStudents = (students: User[]) => {
@@ -103,7 +100,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDepartment =
-        department === "All Departments" || student.department === department;
+        department === "All Majors" || student.major === department;
       return matchesSearch && matchesDepartment;
     });
   };
@@ -153,7 +150,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                 <SelectValue placeholder="Department" />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700">
-                {DEPARTMENTS.map((dept) => (
+                {majors.map((dept) => (
                   <SelectItem
                     key={dept}
                     value={dept}
@@ -198,7 +195,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                       >
                         View Schedule
                       </Button>
-                      <Button
+                      {/* <Button
                         size="sm"
                         className={
                           student.mutualFollow
@@ -208,7 +205,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                         onClick={() => handleFollowToggle(student.id)}
                       >
                         {student.mutualFollow ? "Following" : "Follow Back"}
-                      </Button>
+                      </Button> */}
                     </div>
                   </div>
                 ))
@@ -250,7 +247,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                       <Button
                         size="sm"
                         className="bg-pink-700 hover:bg-pink-600 text-white"
-                        onClick={() => handleFollowToggle(student.id, true)}
+                        // onClick={() => handleFollowToggle(student.id, true)}
                       >
                         Follow
                       </Button>
