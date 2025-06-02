@@ -21,22 +21,28 @@ interface FollowingViewProps {
 
 export default function FollowingView({ following }: FollowingViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [department, setDepartment] = useState("All Majors");
-  const [discoverableStudents, setDiscoverableStudents] = useState<User[]>([]);
   const [followingList, setFollowingList] = useState(following);
 
+  const [discoverableStudents, setDiscoverableStudents] = useState<User[]>([]);
+  const [userFollowers, setUserFollowers] = useState<User[]>();
+  const [userFollowings, setUserFollowings] = useState<User[]>();
+  const [userFollowingPendings, setUserFollowingPendings] = useState<User[]>();
+
+  const [major, setMajor] = useState("All Majors");
   const [majors, setMajors] = useState<string[]>([]);
   const user = localStorage.getItem("user");
   const userId = user ? JSON.parse(user).id : null;
 
   const getAllFollowedUsers = async () => {
-    const response = await fetch("http://localhost:8888/get-followed", {
-      method: "POST",
-      body: JSON.stringify({ user_id: userId }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(
+      "http://localhost:8888/get-user-follow/" + userId,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     const result = await response.json();
     setFollowingList(result);
@@ -63,6 +69,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
 
   useEffect(() => {
     getAllAvailableUsers();
+    getAllFollowedUsers();
   }, []);
 
   // Handle follow/unfollow action
@@ -100,7 +107,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDepartment =
-        department === "All Majors" || student.major === department;
+        major === "All Majors" || student.major === major;
       return matchesSearch && matchesDepartment;
     });
   };
@@ -117,7 +124,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
       </CardHeader>
       <CardContent className="p-6">
         <Tabs defaultValue="following" className="w-full">
-          <TabsList className="mb-6 bg-gray-900">
+          <TabsList className="mb-6 bg-gray-900 space-x-1">
             <TabsTrigger
               value="following"
               className="data-[state=active]:bg-pink-900 data-[state=active]:text-white"
@@ -145,7 +152,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                 className="pl-9 bg-gray-800 border-gray-700 text-white"
               />
             </div>
-            <Select value={department} onValueChange={setDepartment}>
+            <Select value={major} onValueChange={setMajor}>
               <SelectTrigger className="w-full md:w-[200px] bg-gray-800 border-gray-700 text-white">
                 <SelectValue placeholder="Department" />
               </SelectTrigger>
@@ -211,7 +218,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  {searchQuery || department !== "All Departments"
+                  {searchQuery || major !== "All Majors"
                     ? "No students match your search criteria"
                     : "You're not following any students yet"}
                 </div>
@@ -256,7 +263,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                 ))
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  {searchQuery || department !== "All Departments"
+                  {searchQuery || major !== "All Departments"
                     ? "No students match your search criteria"
                     : "No more students to discover"}
                 </div>
