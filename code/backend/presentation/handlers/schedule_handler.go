@@ -81,7 +81,7 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 	}
 
 	if scheduleRequest.RecurringUntil != "" {
-		recurringUntil, err := time.Parse("2006-01-02T15:04:05", scheduleRequest.RecurringUntil)
+		recurringUntil, err := time.Parse("2006-01-02", scheduleRequest.RecurringUntil)
 		if err != nil {
 			log.Println(err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recurring until time"})
