@@ -1,7 +1,6 @@
 package database
 
 import (
-	"log"
 	"os"
 	"sync"
 
@@ -17,10 +16,7 @@ var (
 )
 
 func init() {
-	err = godotenv.Load("config/.env")
-	if err != nil {
-		log.Println("Config not found")
-	}
+	_ = godotenv.Load("config/.env")
 }
 
 func GetDB() *gorm.DB {
