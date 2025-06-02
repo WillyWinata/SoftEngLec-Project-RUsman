@@ -52,7 +52,6 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		EndTime      string          `json:"endTime"`
 		Title        string          `json:"title"`
 		Description  string          `json:"description"`
-		Status       string          `json:"status"`
 		Type         string          `json:"type"`
 		Location     string          `json:"location"`
 		Category     string          `json:"category"`
@@ -87,7 +86,6 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		EndTime:     endTime,
 		Title:       scheduleRequest.Title,
 		Description: scheduleRequest.Description,
-		Status:      scheduleRequest.Status,
 		Type:        scheduleRequest.Type,
 		Location:    scheduleRequest.Location,
 		Category:    scheduleRequest.Category,

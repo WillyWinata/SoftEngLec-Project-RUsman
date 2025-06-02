@@ -13,8 +13,6 @@ type Schedule struct {
 	EndTime     time.Time `gorm:"not null" json:"endTime"`
 	Title       string    `gorm:"not null" json:"title"`
 	Description string    `gorm:"not null" json:"description"`
-	Status      string    `gorm:"not null" json:"status"`
-	Type        string    `gorm:"not null" json:"type"`
 	Location    string    `gorm:"not null" json:"location"`
 	Category    string    `gorm:"not null" json:"category"`
 }
