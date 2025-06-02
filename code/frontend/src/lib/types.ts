@@ -1,11 +1,13 @@
 export interface User {
   id: string;
   name: string;
+  studentId: string;
   email: string;
-  department: string;
-  year: string;
-  avatar: string;
-  mutualFollow?: boolean;
+  major: string;
+  role: string;
+  password: string;
+  profilePicture: string;
+  isActive: boolean;
 }
 
 export interface Schedule {
