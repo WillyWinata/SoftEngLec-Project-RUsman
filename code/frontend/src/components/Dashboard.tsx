@@ -30,10 +30,10 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [followingList, setFollowingList] = useState<User[]>([]);
-  const [userFollowDetails, setUserFollowDetails] = useState<UserFollowDetails>({
+  const [, setUserFollowDetails] = useState<UserFollowDetails>({
     user: currentUser as User,
     following: [],
-    followers: [],
+    follower: [],
     followingPending: [],
   });
   const [mutualFollow, setMutualFollow] = useState<User[]>([]);
@@ -212,6 +212,7 @@ export default function Dashboard() {
             <EventView
               currentUser={currentUser as User}
               following={followingList}
+              mutualFollow={mutualFollow}
             />
           </div>
         ) : (

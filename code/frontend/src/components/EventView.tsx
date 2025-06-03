@@ -33,9 +33,10 @@ import Participant from "@/models/Participant";
 interface EventViewProps {
   currentUser: User;
   following: User[];
+  mutualFollow: User[];
 }
 
-export default function EventView({ currentUser, following }: EventViewProps) {
+export default function EventView({ currentUser, following, mutualFollow }: EventViewProps) {
 
   const [activeTab, setActiveTab] = useState("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
@@ -265,6 +266,7 @@ export default function EventView({ currentUser, following }: EventViewProps) {
         selectedDate={new Date()}
         currentUser={currentUser}
         following={following}
+        mutualFollow={mutualFollow}
       />
     </Card>
   );
