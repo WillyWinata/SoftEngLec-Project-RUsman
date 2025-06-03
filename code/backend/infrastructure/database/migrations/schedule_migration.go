@@ -31,10 +31,9 @@ func (c *scheduleMigration) MigrateSchedule() {
 }
 
 func (c *scheduleMigration) SeedSchedule() {
-	loc, _ := time.LoadLocation("Asia/Jakarta")
+	loc := time.Local
 
 	seeds := []entities.Schedule{
-		{Id: uuid.New()},
 		{
 			Id:          uuid.New(),
 			UserId:      uuid.MustParse("33a5345c-daad-40c3-9a1f-9eb7fc5b9325"),
