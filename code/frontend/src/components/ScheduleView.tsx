@@ -59,7 +59,7 @@ const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
  * Jadi untuk week view, setiap baris slot (“h-14”) sebenarnya 56 px tingginya.
  */
 const TIME_SLOT_HEIGHT = 56; // px per jam di week view (harus sama dengan h-14)
-const DAY_SLOT_HEIGHT = 64;  // px per jam di day view  (harus sama dengan h-16)
+const DAY_SLOT_HEIGHT = 64; // px per jam di day view  (harus sama dengan h-16)
 
 export default function ScheduleView({
   schedules,
@@ -182,7 +182,9 @@ export default function ScheduleView({
 
       // Ambil jam & menit literal dari string
       const timePartStart = event.startTime.slice(11); // misal "11:20:00.000" atau "11:20:00.000Z"
-      const [hStart, mStart] = timePartStart.split(":").map((s) => parseInt(s, 10));
+      const [hStart, mStart] = timePartStart
+        .split(":")
+        .map((s) => parseInt(s, 10));
       const timePartEnd = event.endTime.slice(11);
       const [hEnd, mEnd] = timePartEnd.split(":").map((s) => parseInt(s, 10));
 
@@ -192,7 +194,10 @@ export default function ScheduleView({
         endTotalMinutes += 24 * 60;
       }
 
-      return slotTotalMinutes >= startTotalMinutes && slotTotalMinutes < endTotalMinutes;
+      return (
+        slotTotalMinutes >= startTotalMinutes &&
+        slotTotalMinutes < endTotalMinutes
+      );
     });
   };
 
@@ -209,10 +214,10 @@ export default function ScheduleView({
       const [sY, sM, sD] = evStart;
       const [eY, eM, eD] = evEnd;
 
-      const startsOnDay = sY === year && (sM - 1) === month && sD === dayNum;
-      const endsOnDay = eY === year && (eM - 1) === month && eD === dayNum;
+      const startsOnDay = sY === year && sM - 1 === month && sD === dayNum;
+      const endsOnDay = eY === year && eM - 1 === month && eD === dayNum;
 
-      // Multi‐day check: 
+      // Multi‐day check:
       const evStartObj = new Date(sY, sM - 1, sD);
       const evEndObj = new Date(eY, eM - 1, eD).getTime() + 24 * 60 * 60 * 1000;
       const dayObj = new Date(year, month, dayNum).getTime();
@@ -225,17 +230,52 @@ export default function ScheduleView({
     });
   };
 
+  function getPositionedEvents(events) {
+    const sorted = [...events].sort(
+      (a, b) =>
+        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
+    const positioned = [];
+
+    for (let i = 0; i < sorted.length; i++) {
+      const current = sorted[i];
+      const currentStart = new Date(current.startTime).getTime();
+      const currentEnd = new Date(current.endTime).getTime();
+
+      // Find overlapping events before this one
+      const overlaps = positioned.filter((e) => {
+        const s = new Date(e.startTime).getTime();
+        const eEnd = new Date(e.endTime).getTime();
+        return s < currentEnd && eEnd > currentStart;
+      });
+
+      const usedCols = overlaps.map((e) => e.col);
+      let col = 0;
+      while (usedCols.includes(col)) col++;
+
+      positioned.push({
+        ...current,
+        col,
+        totalCols: Math.max(col + 1, ...overlaps.map((e) => e.totalCols)),
+      });
+    }
+
+    return positioned;
+  }
+
   // Ambil events untuk satu hari di day view
-  const getEventsForSelectedDay = (
-    date: Date,
-    schedules: Schedule[]
-  ) => {
+  const getEventsForSelectedDay = (date: Date, schedules: Schedule[]) => {
     const targetDateStr = format(date, "yyyy-MM-dd");
-    return schedules.filter((sch) => sch.startTime.slice(0, 10) === targetDateStr);
+    return schedules.filter(
+      (sch) => sch.startTime.slice(0, 10) === targetDateStr
+    );
   };
 
   const getDateForDay = (dayIndex: number) => {
-    const date = addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), dayIndex);
+    const date = addDays(
+      startOfWeek(currentDate, { weekStartsOn: 1 }),
+      dayIndex
+    );
     return format(date, "MMM d");
   };
   const isToday = (date: Date) => isSameDay(date, new Date());
@@ -254,7 +294,15 @@ export default function ScheduleView({
   ) => {
     const today = new Date();
     const todayName = format(today, "EEEE");
-    const daysArr = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    const daysArr = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
     const todayIdx = daysArr.indexOf(todayName);
     const tgtIdx = daysArr.indexOf(day);
 
@@ -365,7 +413,10 @@ export default function ScheduleView({
           <div className="w-16 h-10 bg-gray-900 border-r border-gray-800 flex-shrink-0"></div>
           <div className="flex-1 grid grid-cols-7">
             {DAYS_OF_WEEK.map((dayLabel, idx) => {
-              const d = addDays(startOfWeek(currentDate, { weekStartsOn: 1 }), idx);
+              const d = addDays(
+                startOfWeek(currentDate, { weekStartsOn: 1 }),
+                idx
+              );
               return (
                 <div
                   key={dayLabel}
@@ -433,9 +484,7 @@ export default function ScheduleView({
                             <div
                               className="absolute left-0 right-0 border-t-2 border-pink-500 z-10"
                               style={{
-                                top: `${
-                                  (new Date().getMinutes() / 60) * 100
-                                }%`,
+                                top: `${(new Date().getMinutes() / 60) * 100}%`,
                               }}
                             >
                               <div className="absolute -left-1 -top-1.5 w-2 h-2 rounded-full bg-pink-500"></div>
@@ -446,52 +495,59 @@ export default function ScheduleView({
                     })}
 
                     {/* 2) Render overlay event untuk hari ini */}
-                    {schedules
-                      .filter((ev) => {
-                        // ambil "YYYY-MM-DD" → event.startTime.slice(0,10)
-                        return ev.startTime.slice(0, 10) === columnDateStr;
-                      })
-                      .map((ev) => {
-                        // Ambil jam & menit mulai → ev.startTime.slice(11,...)
-                        const timePartStart = ev.startTime.slice(11); // "11:20:00.000" atau bisa ada "Z"
-                        const [hS, mS] = timePartStart.split(":").map((s) => parseInt(s, 10));
-                        const timePartEnd = ev.endTime.slice(11);
-                        const [hE, mE] = timePartEnd.split(":").map((s) => parseInt(s, 10));
+                    {getPositionedEvents(
+                      schedules.filter(
+                        (ev) => ev.startTime.slice(0, 10) === columnDateStr
+                      )
+                    ).map((ev) => {
+                      const [hS, mS] = ev.startTime
+                        .slice(11)
+                        .split(":")
+                        .map((s) => parseInt(s, 10));
+                      const [hE, mE] = ev.endTime
+                        .slice(11)
+                        .split(":")
+                        .map((s: string) => parseInt(s, 10));
+                      const startTotalMin = hS * 60 + mS;
+                      let endTotalMin = hE * 60 + mE;
+                      if (endTotalMin <= startTotalMin) endTotalMin += 24 * 60;
+                      const durationMin = endTotalMin - startTotalMin;
 
-                        let startTotalMin = hS * 60 + mS;
-                        let endTotalMin = hE * 60 + mE;
-                        if (endTotalMin <= startTotalMin) endTotalMin += 24 * 60;
+                      const topPx = (startTotalMin / 60) * TIME_SLOT_HEIGHT;
+                      const heightPx = (durationMin / 60) * TIME_SLOT_HEIGHT;
+                      const widthPercent = 100 / ev.totalCols;
+                      const leftPercent = ev.col * widthPercent;
 
-                        const durationMin = endTotalMin - startTotalMin;
+                      console.log(
+                        `Total Columns ${ev.totalCols} Width Percent ${widthPercent} and Left Percent ${leftPercent}`
+                      );
 
-                        // Konversi ke px: (menit / 60) × TIME_SLOT_HEIGHT
-                        const topPx = (startTotalMin / 60) * TIME_SLOT_HEIGHT;
-                        const heightPx = (durationMin / 60) * TIME_SLOT_HEIGHT;
-
-                        return (
-                          <div
-                            key={ev.id}
-                            className="absolute left-0 right-0 rounded overflow-hidden flex flex-col"
-                            style={{
-                              top: `${topPx}px`,
-                              height: `${heightPx}px`,
-                              backgroundColor: ev.color + "33",
-                            }}
-                          >
-                            <div className="p-1 text-xs">
-                              <div
-                                className="font-medium"
-                                style={{ color: ev.color }}
-                              >
-                                {ev.title}
-                              </div>
-                              <div className="text-[10px] text-gray-300">
-                                {ev.description}
-                              </div>
+                      return (
+                        <div
+                          key={ev.id}
+                          className="absolute rounded overflow-hidden flex flex-col"
+                          style={{
+                            top: `${topPx}px`,
+                            height: `${heightPx}px`,
+                            width: `${widthPercent}%`,
+                            left: `${leftPercent}%`,
+                            backgroundColor: ev.color + "33",
+                          }}
+                        >
+                          <div className="p-1 text-xs">
+                            <div
+                              className="font-medium"
+                              style={{ color: ev.color }}
+                            >
+                              {ev.title}
+                            </div>
+                            <div className="text-[10px] text-gray-300">
+                              {ev.description}
                             </div>
                           </div>
-                        );
-                      })}
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -559,9 +615,13 @@ export default function ScheduleView({
                 const hits = dayEvents.filter((ev) => {
                   // Ambil jam/menit mulai & akhir literal
                   const timeStart = ev.startTime.slice(11);
-                  const [hS, mS] = timeStart.split(":").map((s) => parseInt(s, 10));
+                  const [hS, mS] = timeStart
+                    .split(":")
+                    .map((s) => parseInt(s, 10));
                   const timeEnd = ev.endTime.slice(11);
-                  const [hE, mE] = timeEnd.split(":").map((s) => parseInt(s, 10));
+                  const [hE, mE] = timeEnd
+                    .split(":")
+                    .map((s) => parseInt(s, 10));
 
                   let startMin = hS * 60 + mS;
                   let endMin = hE * 60 + mE;
@@ -575,8 +635,7 @@ export default function ScheduleView({
                   <div
                     key={time}
                     className={`h-16 border-b border-gray-800 relative ${
-                      isToday(currentDate) &&
-                      new Date().getHours() === slotH
+                      isToday(currentDate) && new Date().getHours() === slotH
                         ? "bg-pink-900/10"
                         : ""
                     }`}
@@ -587,9 +646,7 @@ export default function ScheduleView({
                         <div
                           className="absolute left-0 right-0 border-t-2 border-pink-500 z-10"
                           style={{
-                            top: `${
-                              (new Date().getMinutes() / 60) * 100
-                            }%`,
+                            top: `${(new Date().getMinutes() / 60) * 100}%`,
                           }}
                         >
                           <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-pink-500"></div>

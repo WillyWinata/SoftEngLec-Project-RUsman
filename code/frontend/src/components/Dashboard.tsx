@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [selectedFriends, setSelectedFriends] = useState<string[]>(["user-2"]); // Default to showing Alice's schedule
+  const [selectedFriends, setSelectedFriends] = useState<string[]>([]); // Default to showing Alice's schedule
   const [currentView, setCurrentView] = useState<"day" | "week" | "month">(
     "week"
   );
@@ -30,12 +30,14 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [followingList, setFollowingList] = useState<User[]>([]);
-  const [, setUserFollowDetails] = useState<UserFollowDetails>({
-    user: currentUser as User,
-    following: [],
-    follower: [],
-    followingPending: [],
-  });
+  const [userFollowDetails, setUserFollowDetails] = useState<UserFollowDetails>(
+    {
+      user: currentUser as User,
+      following: [],
+      follower: [],
+      followingPending: [],
+    }
+  );
   const [mutualFollow, setMutualFollow] = useState<User[]>([]);
 
   const user = localStorage.getItem("user");
@@ -43,7 +45,59 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
-  // Toggle friend selection
+  const getFriendSchedules = async (friends: string[]) => {
+    const users: User[] = mutualFollow.filter((user) =>
+      friends.includes(user.id)
+    );
+    users.push(userFollowDetails.user);
+
+    let allSchedules: Schedule[] = [];
+
+    for (const user of users) {
+      const response = await fetch("http://localhost:8888/get-schedules", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      const coloredSchedules = data.map((s: Schedule) => {
+        let color = "#FFC0CB"; // pink for others
+
+        if (user.id === userId) {
+          switch (s.category) {
+            case "Work":
+              color = "#54DAFF";
+              break;
+            case "Study":
+              color = "#FFFF00";
+              break;
+            case "Personal":
+              color = "#00FF00";
+              break;
+            case "Social":
+              color = "#D53716";
+              break;
+          }
+        }
+
+        return {
+          ...s,
+          color,
+        };
+      });
+
+      allSchedules = allSchedules.concat(coloredSchedules);
+    }
+
+    setSchedules(allSchedules); // ✅ replace instead of append
+  };
+
   const toggleFriend = (userId: string) => {
     setSelectedFriends((prev) =>
       prev.includes(userId)
@@ -52,9 +106,18 @@ export default function Dashboard() {
     );
   };
 
-  
   useEffect(() => {
-    if(!currentUser) return;
+    getFriendSchedules(selectedFriends);
+  }, [selectedFriends]);
+
+  useEffect(() => {
+    console.log(schedules);
+  }, [schedules]);
+
+  // Toggle friend selection
+
+  useEffect(() => {
+    if (!currentUser) return;
 
     const getAllFollowedUsers = async () => {
       const response = await fetch(
@@ -66,21 +129,21 @@ export default function Dashboard() {
           },
         }
       );
-  
+
       const result = await response.json();
       setFollowingList(result.following);
-  
+
       setUserFollowDetails({
         user: result.user,
         following: result.following,
         follower: result.follower,
         followingPending: result.followingPending,
       });
-  
+
       const mutual = result.following.filter((user: User) =>
-          result.follower.some((follower: User) => follower.id === user.id)
+        result.follower.some((follower: User) => follower.id === user.id)
       );
-    
+
       setMutualFollow(mutual);
     };
 
@@ -142,8 +205,6 @@ export default function Dashboard() {
     getSchedules();
   }, [currentUser]);
 
-  
-
   // const getSchedulesToDisplay = () => {
   //   const schedules: { userId: string; user: User; events: Schedule[] }[] = [
   //     {
@@ -183,7 +244,6 @@ export default function Dashboard() {
       <div className="w-64">
         <Sidebar
           currentUser={currentUser as User}
-          following={followingList}
           selectedFriends={selectedFriends}
           toggleFriend={toggleFriend}
           activeTab={activeTab}

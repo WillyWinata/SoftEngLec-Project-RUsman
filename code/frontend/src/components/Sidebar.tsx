@@ -1,13 +1,13 @@
 "use client";
 
-import type { User } from "@/lib/types";
+import type { User, UserFollowDetails } from "@/lib/types";
 import { Calendar, Users, CalendarClock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react";
 
 interface SidebarProps {
   currentUser: User;
-  following: User[];
   selectedFriends: string[];
   toggleFriend: (userId: string) => void;
   activeTab: string;
@@ -16,14 +16,51 @@ interface SidebarProps {
 
 export default function Sidebar({
   currentUser,
-  following,
   selectedFriends,
   toggleFriend,
   activeTab,
   setActiveTab,
 }: SidebarProps) {
-  // Filter to only show mutual follows
-  const mutualFollows = following.filter((user) => user.mutualFollow);
+  const [followingList, setFollowingList] = useState<User[]>([]);
+  const [, setUserFollowDetails] = useState<UserFollowDetails>({
+    user: currentUser as User,
+    following: [],
+    follower: [],
+    followingPending: [],
+  });
+  const [mutualFollows, setMutualFollows] = useState<User[]>([]);
+
+  const getAllFollowedUsers = async () => {
+    const response = await fetch(
+      "http://localhost:8888/get-user-follow/" + currentUser.id,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result = await response.json();
+    setFollowingList(result.following);
+
+    setUserFollowDetails({
+      user: result.user,
+      following: result.following,
+      follower: result.follower,
+      followingPending: result.followingPending,
+    });
+
+    const mutual = result.following.filter((user: User) =>
+      result.follower.some((follower: User) => follower.id === user.id)
+    );
+
+    setMutualFollows(mutual);
+  };
+
+  useEffect(() => {
+    getAllFollowedUsers();
+  }, []);
 
   return (
     <div className=" fixed top-0 left-0 w-64 bg-gray-900 text-white min-h-screen p-4 border-r border-gray-800">

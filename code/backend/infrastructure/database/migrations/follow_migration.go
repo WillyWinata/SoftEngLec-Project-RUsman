@@ -39,6 +39,11 @@ func (c *followMigration) SeedFollow() {
 		{
 			Id:          uuid.New(),
 			UserId:      uuid.MustParse("bfd239d0-802a-4629-8d5b-ec3c53511e8b"),
+			FollowingId: uuid.MustParse("aef8c352-f6fd-4f7e-8b4a-5f8f3a7d9f4b"),
+		},
+		{
+			Id:          uuid.New(),
+			UserId:      uuid.MustParse("bfd239d0-802a-4629-8d5b-ec3c53511e8b"),
 			FollowingId: uuid.MustParse("cff21ea9-90e2-41f6-8424-5de2c5f3bb1a"),
 		},
 		{
