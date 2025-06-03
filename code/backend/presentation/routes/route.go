@@ -23,7 +23,7 @@ func InitRoutes(r *gin.Engine) {
 	r.DELETE("/delete-schedule/:id", scheduleHandler.Delete)
 	r.GET("/get-schedules-request-by-user/:id", scheduleHandler.GetAllScheduleRequestsByUser)
 	r.GET("/get-schedules-request-by-schedule/:id", scheduleHandler.GetAllScheduleRequestsBySchedule)
-	r.GET("/get-schedules-accepted-by-schedule/:id", scheduleHandler.GetAllAcceptedSchedulesBySchedule)
+	r.GET("/get-schedules-accepted-by-user/:id", scheduleHandler.GetAllAcceptedSchedulesBySchedule)
 	r.PATCH("/accept-schedule", scheduleHandler.AcceptSchedule)
 	r.PATCH("/reject-schedule", scheduleHandler.RejectSchedule)
 

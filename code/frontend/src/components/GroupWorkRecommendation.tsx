@@ -87,7 +87,7 @@ export default function GroupWorkRecommendations({
 
   // Find available time slots for group work
   const findAvailableTimeSlots = () => {
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     const timeSlots = generateTimeSlots()
     const availableSlots: Record<string, { start: string; end: string }[]> = {}
 

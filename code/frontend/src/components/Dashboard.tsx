@@ -277,7 +277,10 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="flex-1 p-4">
-            <FollowingView following={followingList} />
+            <FollowingView
+              setActiveTab={handleTabChange}
+              following={followingList}
+            />
           </div>
         )}
       </div>

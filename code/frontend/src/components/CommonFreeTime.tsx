@@ -76,13 +76,13 @@ export default function CommonFreeTime({
     //   });
 
     return {
-      "Monday": ["All Day"],
-      "Tuesday": ["All Day"],
-      "Wednesday": ["All Day"],
-      "Thursday": ["All Day"],
-      "Friday": ["All Day"],
-      "Saturday": ["All Day"],
-      "Sunday": ["All Day"],
+      "Mon": ["All Day"],
+      "Tue": ["All Day"],
+      "Wed": ["All Day"],
+      "Thu": ["All Day"],
+      "Fri": ["All Day"],
+      "Sat": ["All Day"],
+      "Sun": ["All Day"],
     };
   };
 

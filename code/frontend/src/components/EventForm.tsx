@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EventFormProps {
-  selectedDate: Date
-  onClose: () => void
+  selectedDate: Date;
+  onClose: () => void;
 }
 
 // Sample following data
@@ -21,16 +27,18 @@ const FOLLOWING = [
   { id: 3, name: "Emily Wong" },
   { id: 4, name: "David Lee" },
   { id: 5, name: "Anna Kim" },
-]
+];
 
 export default function EventForm({ selectedDate, onClose }: EventFormProps) {
-  const [title, setTitle] = useState("")
-  const [time, setTime] = useState("09:00")
-  const [category, setCategory] = useState("study")
-  const [selectedParticipants, setSelectedParticipants] = useState<number[]>([])
+  const [title, setTitle] = useState("");
+  const [time, setTime] = useState("09:00");
+  const [category, setCategory] = useState("Study");
+  const [selectedParticipants, setSelectedParticipants] = useState<number[]>(
+    []
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Here you would typically save the event to your database or state
     console.log({
       title,
@@ -38,21 +46,23 @@ export default function EventForm({ selectedDate, onClose }: EventFormProps) {
       time,
       category,
       participants: selectedParticipants,
-    })
+    });
 
     // Reset form and close
-    setTitle("")
-    setTime("09:00")
-    setCategory("study")
-    setSelectedParticipants([])
-    onClose()
-  }
+    setTitle("");
+    setTime("09:00");
+    setCategory("Study");
+    setSelectedParticipants([]);
+    onClose();
+  };
 
   const toggleParticipant = (id: number) => {
     setSelectedParticipants(
-      selectedParticipants.includes(id) ? selectedParticipants.filter((p) => p !== id) : [...selectedParticipants, id],
-    )
-  }
+      selectedParticipants.includes(id)
+        ? selectedParticipants.filter((p) => p !== id)
+        : [...selectedParticipants, id]
+    );
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -105,16 +115,16 @@ export default function EventForm({ selectedDate, onClose }: EventFormProps) {
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
-            <SelectItem value="study" className="text-pink-300">
+            <SelectItem value="Study" className="text-pink-300">
               Study
             </SelectItem>
-            <SelectItem value="work" className="text-pink-300">
+            <SelectItem value="Work" className="text-pink-300">
               Work
             </SelectItem>
-            <SelectItem value="social" className="text-pink-300">
+            <SelectItem value="Social" className="text-pink-300">
               Social
             </SelectItem>
-            <SelectItem value="personal" className="text-pink-300">
+            <SelectItem value="Personal" className="text-pink-300">
               Personal
             </SelectItem>
           </SelectContent>
@@ -132,7 +142,10 @@ export default function EventForm({ selectedDate, onClose }: EventFormProps) {
                 onCheckedChange={() => toggleParticipant(person.id)}
                 className="border-gray-600 data-[state=checked]:bg-pink-600"
               />
-              <Label htmlFor={`person-${person.id}`} className="text-sm text-gray-300 cursor-pointer">
+              <Label
+                htmlFor={`person-${person.id}`}
+                className="text-sm text-gray-300 cursor-pointer"
+              >
                 {person.name}
               </Label>
             </div>
@@ -149,10 +162,13 @@ export default function EventForm({ selectedDate, onClose }: EventFormProps) {
         >
           Cancel
         </Button>
-        <Button type="submit" className="bg-pink-700 hover:bg-pink-600 text-white">
+        <Button
+          type="submit"
+          className="bg-pink-700 hover:bg-pink-600 text-white"
+        >
           Save Event
         </Button>
       </div>
     </form>
-  )
+  );
 }

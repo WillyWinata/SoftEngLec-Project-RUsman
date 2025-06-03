@@ -76,12 +76,10 @@ export default function EventCreationForm({
   const [date, setDate] = useState(selectedDate.toISOString().split("T")[0]);
   const [startTime, setStartTime] = useState(initialStartTime || "09:00");
   const [endTime, setEndTime] = useState(initialEndTime || "10:00");
-  const [category, setCategory] = useState("study");
+  const [category, setCategory] = useState("Study");
   const [location, setLocation] = useState("Room 101");
   const [customLocation, setCustomLocation] = useState("");
-  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
-    []
-  );
+  const [selectedParticipants, setSelectedParticipants] = useState<User[]>([]);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringPattern, setRecurringPattern] = useState("weekly");
   const [recurringDays, setRecurringDays] = useState<string[]>([]);
@@ -90,9 +88,9 @@ export default function EventCreationForm({
   const [reminders, setReminders] = useState<string[]>(["30min"]);
 
   // Toggle participant selection
-  const toggleParticipant = (id: string) => {
+  const toggleParticipant = (user: User) => {
     setSelectedParticipants((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      prev.includes(user) ? prev.filter((p) => p !== user) : [...prev, user]
     );
   };
 
@@ -136,21 +134,23 @@ export default function EventCreationForm({
       // createdBy: currentUser.id,
     };
 
-const adjustTime = (time: string) => {
-  const [hours, minutes] = time.split(':').map(Number);
-  let adjustedHours = hours - 7;
-  if (adjustedHours < 0) adjustedHours += 24;
-  return `${adjustedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-};
+    const adjustTime = (time: string) => {
+      const [hours, minutes] = time.split(":").map(Number);
+      let adjustedHours = hours - 7;
+      if (adjustedHours < 0) adjustedHours += 24;
+      return `${adjustedHours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}`;
+    };
 
-const newSchedule: Schedule = {
-  ...newEvent,
-  id: "",
-  userId: currentUser.id,
-  startTime: `${date}T${adjustTime(startTime)}:00`,
-  endTime: `${date}T${adjustTime(endTime)}:00`,
-  participants: [],
-};
+    const newSchedule: Schedule = {
+      ...newEvent,
+      id: "",
+      userId: currentUser.id,
+      startTime: `${date}T${adjustTime(startTime)}:00`,
+      endTime: `${date}T${adjustTime(endTime)}:00`,
+      participants: selectedParticipants,
+    };
 
     createEvent(newSchedule);
 
@@ -168,7 +168,7 @@ const newSchedule: Schedule = {
     setDate(new Date().toISOString().split("T")[0]);
     setStartTime("09:00");
     setEndTime("10:00");
-    setCategory("study");
+    setCategory("Study");
     setLocation("Room 101");
     setCustomLocation("");
     setSelectedParticipants([]);
@@ -199,15 +199,13 @@ const newSchedule: Schedule = {
 
       // Set a default description
       setDescription(
-        `Group work session with ${mutualFollow.length} mutual followers: ${mutualFollow
-          .map((f) => f.name)
-          .join(", ")}`
+        `Group work session with ${
+          mutualFollow.length
+        } mutual followers: ${mutualFollow.map((f) => f.name).join(", ")}`
       );
 
       // Pre-select mutual followers as participants
-      setSelectedParticipants(
-        mutualFollow.map((f) => f.id)
-      );
+      setSelectedParticipants(mutualFollow.map((f) => f));
     }
   }, [isOpen, initialStartTime, initialEndTime, following, selectedDate]);
 
@@ -303,16 +301,16 @@ const newSchedule: Schedule = {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="study" className="text-pink-300">
+                      <SelectItem value="Study" className="text-pink-300">
                         Study
                       </SelectItem>
-                      <SelectItem value="work" className="text-pink-300">
+                      <SelectItem value="Work" className="text-pink-300">
                         Work
                       </SelectItem>
-                      <SelectItem value="social" className="text-pink-300">
+                      <SelectItem value="Social" className="text-pink-300">
                         Social
                       </SelectItem>
-                      <SelectItem value="personal" className="text-pink-300">
+                      <SelectItem value="Personal" className="text-pink-300">
                         Personal
                       </SelectItem>
                     </SelectContent>
@@ -371,14 +369,16 @@ const newSchedule: Schedule = {
                         >
                           <Checkbox
                             id={`person-${person.id}`}
-                            checked={selectedParticipants.includes(person.id)}
-                            onCheckedChange={() => toggleParticipant(person.id)}
+                            checked={selectedParticipants.includes(person)}
+                            onCheckedChange={() => toggleParticipant(person)}
                             className="border-gray-600 data-[state=checked]:bg-pink-600"
                           />
                           <div className="flex items-center space-x-2 flex-1">
                             <Avatar className="h-8 w-8">
                               <AvatarImage
-                                src={person.profilePicture || "/placeholder.svg"}
+                                src={
+                                  person.profilePicture || "/placeholder.svg"
+                                }
                                 alt={person.name}
                               />
                               <AvatarFallback className="bg-pink-900">
@@ -419,13 +419,13 @@ const newSchedule: Schedule = {
                     Selected Participants ({selectedParticipants.length})
                   </Label>
                   <div className="flex flex-wrap gap-2">
-                    {selectedParticipants.map((id) => {
-                      const person = mutualFollow.find((f) => f.id === id);
+                    {selectedParticipants.map((prt) => {
+                      const person = mutualFollow.find((f) => f === prt);
                       if (!person) return null;
 
                       return (
                         <div
-                          key={id}
+                          key={prt.id}
                           className="flex items-center bg-gray-800 rounded-full px-2 py-1 border border-gray-700"
                         >
                           <Avatar className="h-5 w-5 mr-1">
@@ -445,7 +445,7 @@ const newSchedule: Schedule = {
                             variant="ghost"
                             size="sm"
                             className="h-5 w-5 p-0 ml-1 text-gray-500 hover:text-gray-300"
-                            onClick={() => toggleParticipant(id)}
+                            onClick={() => toggleParticipant(prt)}
                           >
                             <X className="h-3 w-3" />
                           </Button>

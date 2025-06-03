@@ -39,14 +39,23 @@ func NewFollowRequestHandler() FollowRequestHandler {
 }
 
 func (h *followRequestHandler) CreateFollowRequest(c *gin.Context) {
-	var FollowRequest entities.FollowRequest
+	type Request struct {
+		UserId      string `json:"userId"`
+		RequesteeId string `json:"requesteeId"`
+	}
 
-	if err := c.ShouldBindJSON(&FollowRequest); err != nil {
+	var followReq Request
+
+	if err := c.ShouldBindJSON(&followReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	if err := h.service.CreateNewFollowRequest(FollowRequest); err != nil {
+	if err := h.service.CreateNewFollowRequest(entities.FollowRequest{
+		Id:          uuid.New(),
+		UserId:      uuid.MustParse(followReq.UserId),
+		RequesteeId: uuid.MustParse(followReq.RequesteeId),
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -36,29 +36,48 @@ interface EventViewProps {
   mutualFollow: User[];
 }
 
-export default function EventView({ currentUser, following, mutualFollow }: EventViewProps) {
-
+export default function EventView({
+  currentUser,
+  following,
+  mutualFollow,
+}: EventViewProps) {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showEventForm, setShowEventForm] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<Schedule[]>([]);
   const [myEvents, setMyEvents] = useState<Schedule[]>([]);
+  const [allEvents, setAllEvents] = useState<Schedule[]>([]);
   const [invitedEvents, setInvitedEvents] = useState<ScheduleInvitation[]>([]);
 
   useEffect(() => {
+    const lower = searchQuery.toLowerCase();
+    setMyEvents(
+      allEvents.filter(
+        (ev) =>
+          ev.title.toLowerCase().includes(lower) ||
+          ev.description.toLowerCase().includes(lower)
+      )
+    );
+  }, [searchQuery, allEvents]);
+
+  useEffect(() => {
     const getSchedulesAcceptedByUser = async () => {
-      const response = await fetch("http://localhost:8888/get-schedules-accepted-by-user/" + currentUser.id, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "http://localhost:8888/get-schedules-accepted-by-user/" +
+          currentUser.id,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const data = await response.json();
 
       setUpcomingEvents(data);
-    }
+    };
 
     const getMyEvents = async () => {
       const response = await fetch("http://localhost:8888/get-schedules", {
@@ -72,20 +91,26 @@ export default function EventView({ currentUser, following, mutualFollow }: Even
       });
 
       const data = await response.json();
+      setAllEvents(data);
       setMyEvents(data);
-    }
+    };
 
     const getInvitedEvents = async () => {
-      const response = await fetch("http://localhost:8888/get-schedules-request-by-schedule/" + currentUser.id, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "http://localhost:8888/get-schedules-request-by-schedule/" +
+          currentUser.id,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const data = await response.json();
+      console.log(data);
       setInvitedEvents(data);
-    }
+    };
 
     getSchedulesAcceptedByUser();
     getMyEvents();
@@ -96,7 +121,9 @@ export default function EventView({ currentUser, following, mutualFollow }: Even
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
       <CardHeader className="border-b border-gray-800">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-pink-400 text-2xl font-bold tracking-wide">Events</CardTitle>
+          <CardTitle className="text-pink-400 text-2xl font-bold tracking-wide">
+            Events
+          </CardTitle>
           <Button
             className="bg-pink-700 hover:bg-pink-600 text-white"
             onClick={() => setShowEventForm(true)}
@@ -191,10 +218,18 @@ export default function EventView({ currentUser, following, mutualFollow }: Even
           {activeTab === "upcoming" && (
             <TabsContent value="upcoming" className="mt-0">
               <div className="space-y-4">
-                {upcomingEvents.length > 0 ? (
-                  upcomingEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))
+                {myEvents.length > 0 ? (
+                  myEvents
+                    .filter(
+                      (event) =>
+                        new Date(event.startTime).getTime() > Date.now()
+                    )
+                    .sort(
+                      (a, b) =>
+                        new Date(a.startTime).getTime() -
+                        new Date(b.startTime).getTime()
+                    )
+                    .map((event) => <EventCard key={event.id} event={event} />)
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     No upcoming events
@@ -208,9 +243,13 @@ export default function EventView({ currentUser, following, mutualFollow }: Even
             <TabsContent value="created" className="mt-0">
               <div className="space-y-4">
                 {myEvents.length > 0 ? (
-                  myEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))
+                  myEvents
+                    .sort(
+                      (a, b) =>
+                        new Date(a.startTime).getTime() -
+                        new Date(b.startTime).getTime()
+                    )
+                    .map((event) => <EventCard key={event.id} event={event} />)
                 ) : (
                   <div className="text-center py-8 text-gray-500">
                     You haven't created any events yet
@@ -231,7 +270,8 @@ export default function EventView({ currentUser, following, mutualFollow }: Even
                       {invitedEvents.length !== 1 ? "s" : ""}
                     </p>
                     <p className="text-sm text-pink-200/70">
-                      Please respond to these invitations to update your schedule
+                      Please respond to these invitations to update your
+                      schedule
                     </p>
                   </div>
                 </div>
@@ -295,7 +335,7 @@ function EventCard(event: { event: Schedule }) {
     const hours = Math.floor(duration / (1000 * 60 * 60));
     const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
-  }
+  };
 
   return (
     <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
@@ -312,17 +352,17 @@ function EventCard(event: { event: Schedule }) {
           variant="outline"
           className={`
             ${
-              event.event.category === "work"
+              event.event.category === "Work"
                 ? "border-pink-500 text-pink-400"
                 : ""
             }
             ${
-              event.event.category === "study"
+              event.event.category === "Study"
                 ? "border-purple-500 text-purple-400"
                 : ""
             }
             ${
-              event.event.category === "social"
+              event.event.category === "Social"
                 ? "border-blue-500 text-blue-400"
                 : ""
             }
@@ -340,7 +380,8 @@ function EventCard(event: { event: Schedule }) {
         </div>
         <div className="flex items-center text-sm text-gray-300">
           <Clock className="h-4 w-4 mr-2 text-gray-500" />
-          {getTime(event.event.startTime)} - {getTime(event.event.endTime)} ({getDuration(event.event.startTime, event.event.endTime)})
+          {getTime(event.event.startTime)} - {getTime(event.event.endTime)} (
+          {getDuration(event.event.startTime, event.event.endTime)})
         </div>
         <div className="flex items-center text-sm text-gray-300 col-span-2">
           <Tag className="h-4 w-4 mr-2 text-gray-500" />
@@ -374,19 +415,6 @@ function EventCard(event: { event: Schedule }) {
           </div>
         </div>
       )}
-
-      <div className="mt-4 flex justify-end space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-gray-700 hover:bg-gray-800 text-gray-300"
-        >
-          View Details
-        </Button>
-        <Button size="sm" className="bg-pink-700 hover:bg-pink-600 text-white">
-          Join Event
-        </Button>
-      </div>
     </div>
   );
 }
@@ -394,8 +422,8 @@ function EventCard(event: { event: Schedule }) {
 // Invitation card component with accept/decline actions
 function InvitationCard({
   invitation,
-  // onRespond,
-}: {
+}: // onRespond,
+{
   invitation: ScheduleInvitation;
   // onRespond: (id: number, status: "accepted" | "declined") => void;
 }) {
@@ -421,8 +449,8 @@ function InvitationCard({
     const hours = Math.floor(duration / (1000 * 60 * 60));
     const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h ${minutes}m`;
-  }
-  
+  };
+
   return (
     <div
       className={`p-4 bg-gray-900 rounded-lg border ${
@@ -436,7 +464,9 @@ function InvitationCard({
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center">
-            <h3 className="font-medium text-lg text-pink-300">{invitation.schedule.title}</h3>
+            <h3 className="font-medium text-lg text-pink-300">
+              {invitation.schedule.title}
+            </h3>
             {invitation.status === "pending" && (
               <Badge className="ml-2 bg-pink-900 text-pink-100">Pending</Badge>
             )}
@@ -449,7 +479,9 @@ function InvitationCard({
               <Badge className="ml-2 bg-gray-700 text-gray-300">Declined</Badge>
             )}
           </div>
-          <p className="text-sm text-gray-400 mt-1">{invitation.schedule.description}</p>
+          <p className="text-sm text-gray-400 mt-1">
+            {invitation.schedule.description}
+          </p>
           <p className="text-xs text-gray-500 mt-1">
             Invited by: {invitation.user.name}
           </p>
@@ -457,14 +489,20 @@ function InvitationCard({
         <Badge
           variant="outline"
           className={`
-            ${invitation.schedule.category.toLowerCase() === "work" ? "border-pink-500 text-pink-400" : ""}
+            ${
+              invitation.schedule.category.toLowerCase() === "work"
+                ? "border-pink-500 text-pink-400"
+                : ""
+            }
             ${
               invitation.schedule.category.toLowerCase() === "study"
                 ? "border-purple-500 text-purple-400"
                 : ""
             }
             ${
-              invitation.schedule.category.toLowerCase() === "social" ? "border-blue-500 text-blue-400" : ""
+              invitation.schedule.category.toLowerCase() === "social"
+                ? "border-blue-500 text-blue-400"
+                : ""
             }
             capitalize
           `}
@@ -480,7 +518,13 @@ function InvitationCard({
         </div>
         <div className="flex items-center text-sm text-gray-300">
           <Clock className="h-4 w-4 mr-2 text-gray-500" />
-          {getTime(invitation.schedule.startTime)} - {getTime(invitation.schedule.endTime)} ({getDuration(invitation.schedule.startTime, invitation.schedule.endTime)})
+          {getTime(invitation.schedule.startTime)} -{" "}
+          {getTime(invitation.schedule.endTime)} (
+          {getDuration(
+            invitation.schedule.startTime,
+            invitation.schedule.endTime
+          )}
+          )
         </div>
         <div className="flex items-center text-sm text-gray-300 col-span-2">
           <Tag className="h-4 w-4 mr-2 text-gray-500" />
@@ -488,32 +532,35 @@ function InvitationCard({
         </div>
       </div>
 
-      {invitation.schedule.participants && invitation.schedule.participants.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-800">
-          <p className="text-sm text-gray-400 mb-2">Other Participants:</p>
-          <div className="flex flex-wrap gap-2">
-            {invitation.schedule.participants.map((participant: Participant) => (
-              <div
-                key={participant.id}
-                className="flex items-center bg-gray-800 rounded-full px-2 py-1"
-              >
-                <Avatar className="h-5 w-5 mr-1">
-                  <AvatarImage
-                    src={participant.profilePicture || "/placeholder.svg"}
-                    alt={participant.name}
-                  />
-                  <AvatarFallback className="text-[10px] bg-pink-900">
-                    {participant.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-xs text-gray-300">
-                  {participant.name}
-                </span>
-              </div>
-            ))}
+      {invitation.schedule.participants &&
+        invitation.schedule.participants.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-gray-800">
+            <p className="text-sm text-gray-400 mb-2">Other Participants:</p>
+            <div className="flex flex-wrap gap-2">
+              {invitation.schedule.participants.map(
+                (participant: Participant) => (
+                  <div
+                    key={participant.id}
+                    className="flex items-center bg-gray-800 rounded-full px-2 py-1"
+                  >
+                    <Avatar className="h-5 w-5 mr-1">
+                      <AvatarImage
+                        src={participant.profilePicture || "/placeholder.svg"}
+                        alt={participant.name}
+                      />
+                      <AvatarFallback className="text-[10px] bg-pink-900">
+                        {participant.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs text-gray-300">
+                      {participant.name}
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       <div className="mt-4 flex justify-between items-center">
         <div>

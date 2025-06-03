@@ -14,21 +14,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { User } from "@/lib/types";
+import { useNavigate } from "react-router-dom";
 
 interface FollowingViewProps {
   following: User[];
+  setActiveTab: (tab: string) => void;
 }
 
-export default function FollowingView({ following }: FollowingViewProps) {
+export default function FollowingView({
+  following,
+  setActiveTab,
+}: FollowingViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [followingList, setFollowingList] = useState(following);
 
+  const [users, setUsers] = useState<User[]>([]);
   const [discoverableStudents, setDiscoverableStudents] = useState<User[]>([]);
   const [userFollowers, setUserFollowers] = useState<User[]>([]);
   const [userFollowings, setUserFollowings] = useState<User[]>([]);
   const [userFollowingPendings, setUserFollowingPendings] = useState<User[]>(
     []
   );
+
+  const navigate = useNavigate();
+
+  const user = localStorage.getItem("user");
+  const userId = user ? JSON.parse(user).id : null;
 
   const [major, setMajor] = useState("All Majors");
   const [majors, setMajors] = useState<string[]>([]);
@@ -42,7 +53,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
     });
 
     const result = await response.json();
-    setDiscoverableStudents(result);
+    setUsers(result);
 
     const uniqueMajors = new Set<string>(
       result.map((user: User) => user.major)
@@ -57,32 +68,18 @@ export default function FollowingView({ following }: FollowingViewProps) {
   }, []);
 
   // Handle follow/unfollow action
-  // const handleFollowToggle = (studentId: string, isDiscoverable = false) => {
-  //   if (isDiscoverable) {
-  //     // Find the student in the discoverable list
-  //     const student = discoverableStudents.find((s) => s.id === studentId);
-  //     if (student) {
-  //       // Add to following list
-  //       setFollowingList([
-  //         ...followingList,
-  //         { ...student, mutualFollow: false },
-  //       ]);
-  //       // Remove from discoverable list
-  //       setDiscoverableStudents(
-  //         discoverableStudents.filter((s) => s.id !== studentId)
-  //       );
-  //     }
-  //   } else {
-  //     // Toggle follow status in the following list
-  //     setFollowingList(
-  //       followingList.map((student) =>
-  //         student.id === studentId
-  //           ? { ...student, mutualFollow: !student.mutualFollow }
-  //           : student
-  //       )
-  //     );
-  //   }
-  // };
+  const handleFollowToggle = async (studentId: string) => {
+    await fetch("http://localhost:8888/request-follow", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: userId,
+        requesteeId: studentId,
+      }),
+    });
+  };
 
   // Filter students based on search query and department
   const filterStudents = (students: User[]) => {
@@ -183,6 +180,9 @@ export default function FollowingView({ following }: FollowingViewProps) {
                         variant="outline"
                         size="sm"
                         className="border-gray-700 bg-gray-700 hover:bg-gray-600 text-white"
+                        onClick={() => {
+                          setActiveTab("calendar");
+                        }}
                       >
                         View Schedule
                       </Button>
@@ -238,7 +238,7 @@ export default function FollowingView({ following }: FollowingViewProps) {
                       <Button
                         size="sm"
                         className="bg-pink-700 hover:bg-pink-600 text-white"
-                        // onClick={() => handleFollowToggle(student.id, true)}
+                        onClick={() => handleFollowToggle(student.id)}
                       >
                         Follow
                       </Button>

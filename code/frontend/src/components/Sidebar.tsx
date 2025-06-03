@@ -1,10 +1,12 @@
 "use client";
 
 import type { User, UserFollowDetails } from "@/lib/types";
-import { Calendar, Users, CalendarClock } from "lucide-react";
+import { Calendar, Users, CalendarClock, LogOut } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
+import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   currentUser: User;
@@ -29,6 +31,7 @@ export default function Sidebar({
     followingPending: [],
   });
   const [mutualFollows, setMutualFollows] = useState<User[]>([]);
+  const navigate = useNavigate();
 
   const getAllFollowedUsers = async () => {
     const response = await fetch(
@@ -144,7 +147,7 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 w-64 p-4 border-t border-gray-800">
+      <div className="absolute flex justify-between align-middle bottom-0 left-0 w-64 p-4 border-t border-gray-800">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
             <img
@@ -158,6 +161,15 @@ export default function Sidebar({
             <p className="text-sm text-gray-400">{currentUser.studentId}</p>
           </div>
         </div>
+        <button
+          onClick={() => {
+            localStorage.removeItem("user");
+            navigate("/login");
+          }}
+          className="hover:text-red-600 transition-colors"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
       </div>
     </div>
   );

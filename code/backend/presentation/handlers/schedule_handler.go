@@ -111,11 +111,10 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 			}
 
 			if len(scheduleRequest.Participants) > 0 {
-				schedulesParticipants := make([]entities.ScheduleParticipant, len((scheduleRequest.Participants)))
-				var scheduleParticipant entities.ScheduleParticipant
+				schedulesParticipants := make([]entities.ScheduleParticipant, 0)
 
 				for _, participant := range scheduleRequest.Participants {
-					scheduleParticipant = entities.ScheduleParticipant{
+					scheduleParticipant := entities.ScheduleParticipant{
 						Id:         uuid.New(),
 						ScheduleId: schedule.Id,
 						UserId:     participant.Id,
@@ -162,8 +161,8 @@ func (h *scheduleHandler) Create(c *gin.Context) {
 		return
 	}
 
-	if len(scheduleRequest.Participants) == 0 {
-		scheduleParticipants := make([]entities.ScheduleParticipant, len(scheduleRequest.Participants))
+	if len(scheduleRequest.Participants) > 0 {
+		scheduleParticipants := make([]entities.ScheduleParticipant, 0)
 
 		var scheduleParticipant entities.ScheduleParticipant
 
@@ -294,7 +293,7 @@ func (h *scheduleHandler) RejectSchedule(c *gin.Context) {
 }
 
 func (h *scheduleHandler) GetAllScheduleRequestsByUser(c *gin.Context) {
-	userID, err := uuid.Parse(c.Param("userID"))
+	userID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
@@ -310,7 +309,7 @@ func (h *scheduleHandler) GetAllScheduleRequestsByUser(c *gin.Context) {
 }
 
 func (h *scheduleHandler) GetAllScheduleRequestsBySchedule(c *gin.Context) {
-	scheduleID, err := uuid.Parse(c.Param("scheduleID"))
+	scheduleID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid schedule ID"})
 		return
@@ -326,7 +325,7 @@ func (h *scheduleHandler) GetAllScheduleRequestsBySchedule(c *gin.Context) {
 }
 
 func (h *scheduleHandler) GetAllAcceptedSchedulesBySchedule(c *gin.Context) {
-	scheduleID, err := uuid.Parse(c.Param("scheduleID"))
+	scheduleID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid schedule ID"})
 		return
