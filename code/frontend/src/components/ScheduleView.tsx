@@ -468,10 +468,12 @@ export default function ScheduleView({
                     {/* 1) Render baris slot jam sebagai background */}
                     {TIME_SLOTS.map((time) => {
                       // cek apakah ini slot jam saat ini (red line)
+                      const now = new Date();
+                      const jakartaHour = (now.getUTCHours() + 7) % 24;
+                      const jakartaMinute = now.getUTCMinutes();
                       const isCurrentSlot =
                         isToday(columnDate) &&
-                        new Date().getHours() ===
-                          Number.parseInt(time.split(":")[0], 10);
+                        jakartaHour === Number.parseInt(time.split(":")[0], 10);
 
                       return (
                         <div
@@ -484,7 +486,10 @@ export default function ScheduleView({
                             <div
                               className="absolute left-0 right-0 border-t-2 border-pink-500 z-10"
                               style={{
-                                top: `${(new Date().getMinutes() / 60) * 100}%`,
+                                top: `${
+                                  ((jakartaHour + jakartaMinute / 60) / 24) *
+                                  100
+                                }%`,
                               }}
                             >
                               <div className="absolute -left-1 -top-1.5 w-2 h-2 rounded-full bg-pink-500"></div>
