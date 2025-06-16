@@ -798,7 +798,7 @@ export default function ScheduleView({
                         setCurrentDate(newDate);
                       }}
                     >
-                      <SelectTrigger className="w-[4.5rem] h-8 border-gray-700 bg-gray-800 text-white">
+                      <SelectTrigger className="w-[7rem] h-8 border-gray-700 bg-gray-800 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700">
