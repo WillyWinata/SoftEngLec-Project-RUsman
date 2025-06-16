@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +22,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState({
     email: "",
     password: "",
+    other: "", // <-- BARU: untuk error selain email/password (misal account doesn't exist)
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,17 +33,25 @@ export function LoginForm() {
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
+    // Clear "other" error on any change
+    if (errors.other) {
+      setErrors((prev) => ({ ...prev, other: "" }));
+    }
   };
 
   const validateForm = () => {
     let valid = true;
-    const newErrors = { ...errors };
+    const newErrors = { email: "", password: "", other: "" };
 
     if (!formData.email) {
       newErrors.email = "Email is required";
       valid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
+      valid = false;
+    } else if (!formData.email.endsWith("@binus.ac.id")) {
+      // <-- BARU: validasi @binus.ac.id
+      newErrors.email = "Email must be a @binus.ac.id account";
       valid = false;
     }
 
@@ -64,32 +72,51 @@ export function LoginForm() {
     setIsLoading(true);
 
     try {
-      console.log(formData);
-
       const response = await fetch("http://localhost:8888/login-user", {
-        method: "POST", // assuming login
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
+      // BARU: Handle error jika account tidak ditemukan
+      if (response.status === 404) {
+        setErrors({ email: "", password: "", other: "Account doesn't exist." });
+        setIsLoading(false);
+        return;
+      }
 
-      console.log(result);
+      // BARU: Handle error jika password salah
+      if (response.status === 401) {
+        setErrors({ email: "", password: "Wrong password.", other: "" });
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await response.json();
 
       localStorage.setItem("user", JSON.stringify(result));
 
       if (result.id != null) {
-        console.log("Login successful", formData);
         if (result.role === "User") {
           navigate("/home");
         } else if (result.role === "Admin") {
           navigate("/admin");
         }
+      } else {
+        setErrors({
+          email: "",
+          password: "",
+          other: "Unknown error occurred.",
+        });
       }
     } catch (error) {
-      console.error("Login failed", error);
+      setErrors({
+        email: "",
+        password: "",
+        other: "Network error. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -111,7 +138,7 @@ export function LoginForm() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder="name@binus.ac.id"
                 value={formData.email}
                 onChange={handleChange}
                 className={`pl-10 bg-gray-800 border-pink-700 focus:border-pink-500 text-white ${
@@ -164,6 +191,11 @@ export function LoginForm() {
               <p className="text-red-400 text-sm mt-1">{errors.password}</p>
             )}
           </div>
+
+          {/* BARU: Tampilkan error lain (account doesn't exist, dsb) */}
+          {errors.other && (
+            <div className="text-red-400 text-sm mt-1">{errors.other}</div>
+          )}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">

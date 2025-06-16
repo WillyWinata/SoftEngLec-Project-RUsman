@@ -11,6 +11,7 @@ type UserRepository interface {
 	CreateNewUser(model entities.User) error
 	FindUser(id uuid.UUID) (entities.User, error)
 	FindUserByCredential(email string, password string) (entities.User, error)
+	FindUserByEmail(email string) (entities.User, error)
 	GetAllUsers() ([]entities.User, error)
 	UpdateUser(model entities.User) error
 	DeleteUser(id uuid.UUID) error
@@ -39,6 +40,12 @@ func (r *userRepository) FindUserByCredential(email string, password string) (en
 	var entity entities.User
 
 	err := r.db.Where(&entities.User{Email: email, Password: password}).First(&entity).Error
+	return entity, err
+}
+
+func (r *userRepository) FindUserByEmail(email string) (entities.User, error) {
+	var entity entities.User
+	err := r.db.Where("email = ?", email).First(&entity).Error
 	return entity, err
 }
 

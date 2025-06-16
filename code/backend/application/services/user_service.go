@@ -1,9 +1,16 @@
 package services
 
 import (
+	"errors"
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/domain/entities"
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/infrastructure/database/repositories"
 	"github.com/google/uuid"
+)
+
+// Define custom error variables
+var (
+	ErrUserNotFound  = errors.New("user not found")
+	ErrWrongPassword = errors.New("wrong password")
 )
 
 type UserService interface {
@@ -33,12 +40,23 @@ func NewUserService() UserService {
 }
 
 func (s *userService) Login(email string, password string) (entities.User, error) {
-	user, err := s.repo.FindUserByCredential(email, password)
+	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
-		return entities.User{}, err
+		// User tidak ditemukan di database
+		return entities.User{}, ErrUserNotFound // <-- Update: gunakan error khusus
 	}
 
+	// Cek password sekarang (pastikan gunakan hash password di produksi)
+	if !CheckPassword(user.Password, password) { // <-- Update: cek password setelah user ditemukan
+		return entities.User{}, ErrWrongPassword // <-- Update: gunakan error khusus
+	}
 	return user, nil
+}
+
+// Fungsi untuk cek password (dummy, ganti dengan hash checker yang aman)
+func CheckPassword(hashedPassword, inputPassword string) bool {
+	// TODO: Ganti dengan hash checker aman, misal bcrypt
+	return hashedPassword == inputPassword // <-- Untuk demo saja!
 }
 
 func (s *userService) CreateNewUser(User entities.User) error {

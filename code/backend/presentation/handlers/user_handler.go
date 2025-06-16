@@ -59,23 +59,29 @@ func (h *userHandler) Create(c *gin.Context) {
 
 func (h *userHandler) Login(c *gin.Context) {
 	var loginData struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+        Email    string `json:"email"`
+        Password string `json:"password"`
+    }
 
-	if err := c.BindJSON(&loginData); err != nil {
-		log.Panicln(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		return
-	}
+    if err := c.BindJSON(&loginData); err != nil {
+        log.Panicln(err)
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+        return
+    }
 
-	User, err := h.service.Login(loginData.Email, loginData.Password)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
+    User, err := h.service.Login(loginData.Email, loginData.Password)
+    if err != nil {
+        if err == services.ErrUserNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        } else if err == services.ErrWrongPassword {
+            c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong password"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+        }
+        return
+    }
 
-	c.JSON(http.StatusOK, User)
+    c.JSON(http.StatusOK, User)
 }
 
 func (h *userHandler) Get(c *gin.Context) {
