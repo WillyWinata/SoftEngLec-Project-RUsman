@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { User, UserFollowDetails } from "@/lib/types";
-import { useNavigate } from "react-router-dom";
 
 interface FollowingViewProps {
   following: User[];
@@ -38,7 +37,7 @@ export default function FollowingView({
   const [major, setMajor] = useState("All Majors");
   const [majors, setMajors] = useState<string[]>([]);
 
-  const getAllUserRelations = async () => {
+  const getAllUserRelations = async (us: User[]) => {
     const response = await fetch(
       "http://localhost:8888/get-user-follow/" + userId,
       {
@@ -58,16 +57,13 @@ export default function FollowingView({
     const followerIds = new Set(follower.map((u) => u.id));
     const pendingIds = new Set(followingPending.map((u) => u.id));
 
-    // 1. Mutual = in both following and follower
     const mutual = following.filter((u) => followerIds.has(u.id));
     setMutualStudents(mutual);
 
-    // 2. Pending = followingPending list
     setPendingStudents(followingPending);
 
-    // 3. Discoverable = all users who are not in mutual or pending
     const mutualIds = new Set(mutual.map((u) => u.id));
-    const discoverable = users.filter(
+    const discoverable = us.filter(
       (u) => !mutualIds.has(u.id) && !pendingIds.has(u.id)
     );
     setDiscoverableStudents(discoverable);
@@ -89,12 +85,11 @@ export default function FollowingView({
     );
 
     setMajors(["All Majors", ...Array.from(uniqueMajors)]);
-    console.log(Array.from(uniqueMajors));
+    getAllUserRelations(result);
   };
 
   useEffect(() => {
     getAllAvailableUsers();
-    getAllUserRelations();
   }, []);
 
   // Handle follow/unfollow action
