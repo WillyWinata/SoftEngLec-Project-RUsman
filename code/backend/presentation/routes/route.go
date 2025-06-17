@@ -14,6 +14,8 @@ func InitRoutes(r *gin.Engine) {
 	r.PUT("/update-user/:id", userHandler.Update)
 	r.DELETE("/delete-user/:id", userHandler.Delete)
 	r.GET("/get-user-follow/:id", userHandler.GetUserFollowResponse)
+	r.GET("/check-session", userHandler.CheckSession)
+	r.GET("/logout", userHandler.Logout)
 
 	scheduleHandler := handlers.NewScheduleHandler()
 	r.POST("/create-schedule", scheduleHandler.Create)
