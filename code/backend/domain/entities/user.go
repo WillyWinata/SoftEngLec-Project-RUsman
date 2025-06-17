@@ -24,6 +24,7 @@ type UserFollowResponse struct {
 type UserFrontendResponse struct {
 	Id             string `json:"id"`
 	Name           string `json:"name"`
+	Email          string `json:"email"`
 	StudentId      string `json:"studentId"`
 	Role           string `json:"role"`
 	Major          string `json:"major"`

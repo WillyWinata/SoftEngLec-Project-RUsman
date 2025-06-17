@@ -9,6 +9,7 @@ import (
 type FollowService interface {
 	Follow(Follow entities.Follow) error
 	GetFollowsByUser(userId uuid.UUID) ([]entities.Follow, error)
+	Unfollow(userId uuid.UUID, followingId uuid.UUID) error
 }
 
 type followService struct {
@@ -37,4 +38,13 @@ func (s *followService) GetFollowsByUser(userId uuid.UUID) ([]entities.Follow, e
 	}
 
 	return follow, nil
+}
+
+func (s *followService) Unfollow(userId uuid.UUID, followingId uuid.UUID) error {
+	// Cari follow yang sesuai userId dan followingId
+	follow, err := s.repo.GetFollowByUserAndFollower(userId, followingId)
+	if err != nil {
+		return err
+	}
+	return s.repo.DeleteFollow(follow)
 }

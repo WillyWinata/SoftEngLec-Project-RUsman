@@ -19,11 +19,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { User, Schedule } from "@/lib/types";
-import ScheduleLegend from "@/components/ScheduleLegend";
 import CommonFreeTime from "@/components/CommonFreeTime";
 import GroupWorkRecommendations from "@/components/GroupWorkRecommendation";
 import EventCreationForm from "@/components/EventCreationForm";
-import ScheduleDetailPopup from "./ScheduleDetailPopup";
+import ScheduleLegend from "@/components/ScheduleLegend";
 import {
   Select,
   SelectContent,
@@ -54,10 +53,10 @@ const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => {
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /**
- * Hati‐hati: Tailwind “h-14” = 3.5rem = 56px, bukan 14px
- *           Tailwind “h-16” = 4rem   = 64px
+ * Hati‐hati: Tailwind "h-14" = 3.5rem = 56px, bukan 14px
+ *           Tailwind "h-16" = 4rem   = 64px
  *
- * Jadi untuk week view, setiap baris slot (“h-14”) sebenarnya 56 px tingginya.
+ * Jadi untuk week view, setiap baris slot ("h-14") sebenarnya 56 px tingginya.
  */
 const TIME_SLOT_HEIGHT = 56; // px per jam di week view (harus sama dengan h-14)
 const DAY_SLOT_HEIGHT = 64; // px per jam di day view  (harus sama dengan h-16)
@@ -75,11 +74,7 @@ export default function ScheduleView({
 }: ScheduleViewProps) {
   const [showEventForm, setShowEventForm] = useState(false);
   const [initialScrollDone, setInitialScrollDone] = useState(false);
-
-  const [showDetailPopup, setShowDetailPopup] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<
-    (Schedule & { user?: User }) | null
-  >(null);
+  const [localSchedules, setLocalSchedules] = useState(schedules);
 
   // Refs untuk auto‐scroll
   const weekScrollRef = useRef<HTMLDivElement>(null);
@@ -92,12 +87,33 @@ export default function ScheduleView({
     endTime: string;
   } | null>(null);
 
+  // Update localSchedules when schedules prop changes
+  useEffect(() => {
+    setLocalSchedules(schedules);
+  }, [schedules]);
+
+  // Function to refresh schedules
+  const refreshSchedules = async () => {
+    const response = await fetch("http://localhost:8888/get-schedules", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: currentUser.id,
+      }),
+    });
+
+    const data = await response.json();
+    setLocalSchedules(data);
+  };
+
   // Set initialScrollDone = false saat view atau date berubah
   useEffect(() => {
     setInitialScrollDone(false);
   }, [currentView, currentDate]);
 
-  // Auto‐scroll ke “waktu sekarang” jika melihat hari ini
+  // Auto‐scroll ke "waktu sekarang" jika melihat hari ini
   useEffect(() => {
     if (initialScrollDone) return;
 
@@ -131,17 +147,7 @@ export default function ScheduleView({
     return () => clearTimeout(timer);
   }, [currentView, currentDate, initialScrollDone]);
 
-  // == popup detail handlers ==
-  const handleEventClick = (event: Schedule & { user?: User }) => {
-    setSelectedEvent(event);
-    setShowDetailPopup(true);
-  };
-  const handleEventDeleted = (deletedId: string) => {
-    setShowDetailPopup(false);
-    setSelectedEvent(null);
-  };
-
-  // Navigasi “Today”, “<-“, “->”
+  // Navigasi "Today", "<-", "->"
   const goToToday = () => {
     setCurrentDate(new Date());
     setInitialScrollDone(false);
@@ -179,7 +185,7 @@ export default function ScheduleView({
     return "";
   };
 
-  // Ambil events per‐slot (untuk menampilkan “garis merah” current time)
+  // Ambil events per‐slot (untuk menampilkan "garis merah" current time)
   const getEventsForTimeSlot = (
     date: Date,
     timeSlot: string,
@@ -292,7 +298,7 @@ export default function ScheduleView({
       startOfWeek(currentDate, { weekStartsOn: 1 }),
       dayIndex
     );
-    return format(date, "MMM d");
+    return format(date, "MMM d, yyyy");
   };
   const isToday = (date: Date) => isSameDay(date, new Date());
 
@@ -379,6 +385,9 @@ export default function ScheduleView({
               >
                 {format(thisDay, "d")}
               </span>
+              <span className="text-xs text-gray-500">
+                {format(thisDay, "MMM yyyy")}
+              </span>
             </div>
             <div className="mt-1 space-y-1">
               {dayEv.slice(0, 3).map((ev, idx) => (
@@ -386,7 +395,6 @@ export default function ScheduleView({
                   key={idx}
                   className="text-xs truncate rounded px-1 py-0.5 text-white"
                   style={{ backgroundColor: ev.color + "66" }}
-                  onClick={() => handleEventClick(ev)}
                 >
                   {ev.title.split(":")[1] || ev.title}
                 </div>
@@ -485,12 +493,10 @@ export default function ScheduleView({
                     {/* 1) Render baris slot jam sebagai background */}
                     {TIME_SLOTS.map((time) => {
                       // cek apakah ini slot jam saat ini (red line)
-                      const now = new Date();
-                      const jakartaHour = (now.getUTCHours() + 7) % 24;
-                      const jakartaMinute = now.getUTCMinutes();
                       const isCurrentSlot =
                         isToday(columnDate) &&
-                        jakartaHour === Number.parseInt(time.split(":")[0], 10);
+                        new Date().getHours() ===
+                          Number.parseInt(time.split(":")[0], 10);
 
                       return (
                         <div
@@ -503,10 +509,7 @@ export default function ScheduleView({
                             <div
                               className="absolute left-0 right-0 border-t-2 border-pink-500 z-10"
                               style={{
-                                top: `${
-                                  ((jakartaHour + jakartaMinute / 60) / 24) *
-                                  100
-                                }%`,
+                                top: `${(new Date().getMinutes() / 60) * 100}%`,
                               }}
                             >
                               <div className="absolute -left-1 -top-1.5 w-2 h-2 rounded-full bg-pink-500"></div>
@@ -540,10 +543,6 @@ export default function ScheduleView({
                       const widthPercent = 100 / ev.totalCols;
                       const leftPercent = ev.col * widthPercent;
 
-                      console.log(
-                        `Total Columns ${ev.totalCols} Width Percent ${widthPercent} and Left Percent ${leftPercent}`
-                      );
-
                       return (
                         <div
                           key={ev.id}
@@ -555,7 +554,6 @@ export default function ScheduleView({
                             left: `${leftPercent}%`,
                             backgroundColor: ev.color + "33",
                           }}
-                          onClick={() => handleEventClick(ev)}
                         >
                           <div className="p-1 text-xs">
                             <div
@@ -619,7 +617,7 @@ export default function ScheduleView({
                       <span>
                         00:00
                         <br />
-                        {format(currentDate, "MMM d")}
+                        {format(currentDate, "MMM d, yyyy")}
                       </span>
                     ) : (
                       time
@@ -676,13 +674,12 @@ export default function ScheduleView({
                         </div>
                       )}
 
-                    {/* Render semua event yang “menyentuh” slot ini */}
+                    {/* Render semua event yang "menyentuh" slot ini */}
                     {hits.map((ev, idx) => (
                       <div
                         key={`${ev.id}-${idx}`}
                         className="absolute inset-2 rounded overflow-hidden flex flex-col"
                         style={{ backgroundColor: ev.color + "33" }}
-                        onClick={() => handleEventClick(ev)}
                       >
                         <div
                           className="h-1.5 w-full"
@@ -817,7 +814,7 @@ export default function ScheduleView({
                         setCurrentDate(newDate);
                       }}
                     >
-                      <SelectTrigger className="w-[7rem] h-8 border-gray-700 bg-gray-800 text-white">
+                      <SelectTrigger className="w-[4.5rem] h-8 border-gray-700 bg-gray-800 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700">
@@ -903,15 +900,7 @@ export default function ScheduleView({
 
           {/* Legend, Common Free Time, and Group Work Recommendations */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-t border-gray-800">
-            <ScheduleLegend
-              schedules={[
-                {
-                  userId: currentUser.id,
-                  user: currentUser,
-                  events: schedules,
-                },
-              ]}
-            />
+            <ScheduleLegend />
             {selectedFriends.length > 0 && (
               <>
                 <CommonFreeTime
@@ -934,13 +923,7 @@ export default function ScheduleView({
           </div>
         </CardContent>
       </Card>
-      <ScheduleDetailPopup
-        isOpen={showDetailPopup}
-        onClose={() => setShowDetailPopup(false)}
-        event={selectedEvent}
-        currentUser={currentUser}
-        onDeleted={() => selectedEvent && handleEventDeleted(selectedEvent.id)}
-      />
+
       {/* Event Creation Form */}
       <EventCreationForm
         isOpen={showEventForm}
@@ -954,6 +937,7 @@ export default function ScheduleView({
         currentUser={currentUser}
         following={following}
         mutualFollow={mutualFollow}
+        onEventCreated={refreshSchedules}
       />
     </div>
   );
