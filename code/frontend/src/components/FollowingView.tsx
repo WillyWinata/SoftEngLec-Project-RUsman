@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { User } from "@/lib/types";
+import type { User, UserFollowDetails } from "@/lib/types";
 import { useNavigate } from "react-router-dom";
 
 interface FollowingViewProps {
@@ -26,23 +26,52 @@ export default function FollowingView({
   setActiveTab,
 }: FollowingViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [followingList, setFollowingList] = useState(following);
 
   const [users, setUsers] = useState<User[]>([]);
   const [discoverableStudents, setDiscoverableStudents] = useState<User[]>([]);
-  const [userFollowers, setUserFollowers] = useState<User[]>([]);
-  const [userFollowings, setUserFollowings] = useState<User[]>([]);
-  const [userFollowingPendings, setUserFollowingPendings] = useState<User[]>(
-    []
-  );
-
-  const navigate = useNavigate();
+  const [mutualStudents, setMutualStudents] = useState<User[]>([]);
+  const [pendingStudents, setPendingStudents] = useState<User[]>([]);
 
   const user = localStorage.getItem("user");
   const userId = user ? JSON.parse(user).id : null;
 
   const [major, setMajor] = useState("All Majors");
   const [majors, setMajors] = useState<string[]>([]);
+
+  const getAllUserRelations = async () => {
+    const response = await fetch(
+      "http://localhost:8888/get-user-follow/" + userId,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result: UserFollowDetails = await response.json();
+
+    const following: User[] = result.following;
+    const follower: User[] = result.follower;
+    const followingPending: User[] = result.followingPending;
+
+    const followerIds = new Set(follower.map((u) => u.id));
+    const pendingIds = new Set(followingPending.map((u) => u.id));
+
+    // 1. Mutual = in both following and follower
+    const mutual = following.filter((u) => followerIds.has(u.id));
+    setMutualStudents(mutual);
+
+    // 2. Pending = followingPending list
+    setPendingStudents(followingPending);
+
+    // 3. Discoverable = all users who are not in mutual or pending
+    const mutualIds = new Set(mutual.map((u) => u.id));
+    const discoverable = users.filter(
+      (u) => !mutualIds.has(u.id) && !pendingIds.has(u.id)
+    );
+    setDiscoverableStudents(discoverable);
+  };
 
   const getAllAvailableUsers = async () => {
     const response = await fetch("http://localhost:8888/get-users", {
@@ -65,6 +94,7 @@ export default function FollowingView({
 
   useEffect(() => {
     getAllAvailableUsers();
+    getAllUserRelations();
   }, []);
 
   // Handle follow/unfollow action
@@ -93,8 +123,9 @@ export default function FollowingView({
     });
   };
 
-  const filteredFollowing = filterStudents(followingList);
+  const filteredMutual = filterStudents(mutualStudents);
   const filteredDiscoverable = filterStudents(discoverableStudents);
+  const filteredPending = filterStudents(pendingStudents);
 
   return (
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
@@ -107,11 +138,18 @@ export default function FollowingView({
         <Tabs defaultValue="following" className="w-full">
           <TabsList className="mb-6 bg-gray-900 space-x-1">
             <TabsTrigger
-              value="following"
+              value="mutual"
               className="data-[state=active]:bg-pink-900 data-[state=active]:text-white"
             >
               <Users className="h-4 w-4 mr-2" />
-              Following ({followingList.length})
+              Mutual ({mutualStudents.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="pending"
+              className="data-[state=active]:bg-pink-900 data-[state=active]:text-white"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Pending ({pendingStudents.length})
             </TabsTrigger>
             <TabsTrigger
               value="discover"
@@ -151,10 +189,69 @@ export default function FollowingView({
             </Select>
           </div>
 
-          <TabsContent value="following" className="mt-0">
+          <TabsContent value="mutual" className="mt-0">
             <div className="space-y-4">
-              {filteredFollowing.length > 0 ? (
-                filteredFollowing.map((student) => (
+              {filteredMutual.length > 0 ? (
+                filteredMutual.map((student) => (
+                  <div
+                    key={student.id}
+                    className="flex items-center justify-between p-4 bg-gray-800 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={student.profilePicture}
+                        alt={student.name}
+                        className="w-10 h-10 rounded-full bg-gray-700"
+                      />
+                      <div>
+                        <h3 className="font-medium text-white">
+                          {student.name}
+                        </h3>
+                        <p className="text-sm text-gray-400">{student.email}</p>
+                        <div className="text-xs text-gray-500">
+                          {student.major}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-700 bg-gray-700 hover:bg-gray-600 text-white"
+                        onClick={() => {
+                          setActiveTab("calendar");
+                        }}
+                      >
+                        View Schedule
+                      </Button>
+                      {/* <Button
+                        size="sm"
+                        className={
+                          student.mutualFollow
+                            ? "bg-pink-800 hover:bg-pink-700"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }
+                        onClick={() => handleFollowToggle(student.id)}
+                      >
+                        {student.mutualFollow ? "Following" : "Follow Back"}
+                      </Button> */}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  {searchQuery || major !== "All Majors"
+                    ? "No students match your search criteria"
+                    : "You're not following any students yet"}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pending" className="mt-0">
+            <div className="space-y-4">
+              {filteredPending.length > 0 ? (
+                filteredPending.map((student) => (
                   <div
                     key={student.id}
                     className="flex items-center justify-between p-4 bg-gray-800 rounded-lg"
