@@ -31,7 +31,7 @@ func (c *scheduleMigration) MigrateSchedule() {
 }
 
 func (c *scheduleMigration) SeedSchedule() {
-	loc := time.Local
+	loc, _ := time.LoadLocation("Asia/Jakarta")
 
 	seeds := []entities.Schedule{
 		{

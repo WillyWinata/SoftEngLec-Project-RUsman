@@ -85,6 +85,10 @@ export default function ScheduleView({
   const weekScrollRef = useRef<HTMLDivElement>(null);
   const dayScrollRef = useRef<HTMLDivElement>(null);
 
+  const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
+
+  const [events, setEvents] = useState<Schedule[]>(schedules);
+
   // State untuk pre‐fill EventCreationForm
   const [eventFormData, setEventFormData] = useState<{
     date: Date;
@@ -139,6 +143,13 @@ export default function ScheduleView({
   const handleEventDeleted = (deletedId: string) => {
     setShowDetailPopup(false);
     setSelectedEvent(null);
+  };
+
+  const handleEventUpdated = (updatedEvent) => {
+    setSelectedEvent(updatedEvent);
+    setEvents((events) =>
+      events.map((ev) => (ev.id === updatedEvent.id ? updatedEvent : ev))
+    );
   };
 
   // Navigasi “Today”, “<-“, “->”
@@ -539,6 +550,7 @@ export default function ScheduleView({
                       const heightPx = (durationMin / 60) * TIME_SLOT_HEIGHT;
                       const widthPercent = 100 / ev.totalCols;
                       const leftPercent = ev.col * widthPercent;
+                      const isHovered = hoveredEventId === ev.id;
 
                       console.log(
                         `Total Columns ${ev.totalCols} Width Percent ${widthPercent} and Left Percent ${leftPercent}`
@@ -547,7 +559,12 @@ export default function ScheduleView({
                       return (
                         <div
                           key={ev.id}
-                          className="absolute rounded overflow-hidden flex flex-col"
+                          className={
+                            "absolute rounded overflow-hidden flex flex-col" +
+                            (isHovered
+                              ? "shadow-2xl ring-2 ring-cyan-400 z-20"
+                              : "")
+                          }
                           style={{
                             top: `${topPx}px`,
                             height: `${heightPx}px`,
@@ -555,6 +572,8 @@ export default function ScheduleView({
                             left: `${leftPercent}%`,
                             backgroundColor: ev.color + "33",
                           }}
+                          onMouseEnter={() => setHoveredEventId(ev.id)}
+                          onMouseLeave={() => setHoveredEventId(null)}
                           onClick={() => handleEventClick(ev)}
                         >
                           <div className="p-1 text-xs">
@@ -638,6 +657,7 @@ export default function ScheduleView({
                 const hits = dayEvents.filter((ev) => {
                   // Ambil jam/menit mulai & akhir literal
                   const timeStart = ev.startTime.slice(11);
+
                   const [hS, mS] = timeStart
                     .split(":")
                     .map((s) => parseInt(s, 10));
@@ -677,36 +697,45 @@ export default function ScheduleView({
                       )}
 
                     {/* Render semua event yang “menyentuh” slot ini */}
-                    {hits.map((ev, idx) => (
-                      <div
-                        key={`${ev.id}-${idx}`}
-                        className="absolute inset-2 rounded overflow-hidden flex flex-col"
-                        style={{ backgroundColor: ev.color + "33" }}
-                        onClick={() => handleEventClick(ev)}
-                      >
+                    {hits.map((ev, idx) => {
+                      const isHovered = hoveredEventId === ev.id;
+                      return (
                         <div
-                          className="h-1.5 w-full"
-                          style={{ backgroundColor: ev.color }}
-                        ></div>
-                        <div className="p-2">
+                          key={`${ev.id}-${idx}`}
+                          className={`absolute inset-2 rounded overflow-hidden flex flex-col${
+                            isHovered
+                              ? " shadow-2xl ring-2 ring-cyan-400 z-20"
+                              : ""
+                          }`}
+                          style={{ backgroundColor: ev.color + "33" }}
+                          onMouseEnter={() => setHoveredEventId(ev.id)}
+                          onMouseLeave={() => setHoveredEventId(null)}
+                          onClick={() => handleEventClick(ev)}
+                        >
                           <div
-                            className="font-medium text-sm"
-                            style={{ color: ev.color }}
-                          >
-                            {ev.title}
-                          </div>
-                          <div className="text-xs text-gray-300">
-                            {ev.description}
-                          </div>
-                          <div className="text-xs mt-1 flex items-center">
-                            <span className="text-gray-400">
-                              {ev.startTime.slice(11, 16)} -{" "}
-                              {ev.endTime.slice(11, 16)}
-                            </span>
+                            className="h-1.5 w-full"
+                            style={{ backgroundColor: ev.color }}
+                          ></div>
+                          <div className="p-2">
+                            <div
+                              className="font-medium text-sm"
+                              style={{ color: ev.color }}
+                            >
+                              {ev.title}
+                            </div>
+                            <div className="text-xs text-gray-300">
+                              {ev.description}
+                            </div>
+                            <div className="text-xs mt-1 flex items-center">
+                              <span className="text-gray-400">
+                                {ev.startTime.slice(11, 16)} -{" "}
+                                {ev.endTime.slice(11, 16)}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -940,6 +969,7 @@ export default function ScheduleView({
         event={selectedEvent}
         currentUser={currentUser}
         onDeleted={() => selectedEvent && handleEventDeleted(selectedEvent.id)}
+        onUpdated={handleEventUpdated}
       />
       {/* Event Creation Form */}
       <EventCreationForm
