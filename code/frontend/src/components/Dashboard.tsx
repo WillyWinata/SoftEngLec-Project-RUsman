@@ -72,16 +72,16 @@ export default function Dashboard() {
         if (user.id === userId) {
           switch (s.category) {
             case "Work":
-              color = "#54DAFF";
+              color = "#ec4899";
               break;
             case "Study":
-              color = "#FFFF00";
+              color = "#8b5cf6";
               break;
             case "Personal":
-              color = "#00FF00";
+              color = "#10b981";
               break;
             case "Social":
-              color = "#D53716";
+              color = "#3b82f6";
               break;
           }
         }
@@ -180,16 +180,16 @@ export default function Dashboard() {
 
         switch (s.category) {
           case "Work":
-            color = "#54DAFF";
+            color = "#ec4899";
             break;
           case "Study":
-            color = "#FFFF00";
+            color = "#8b5cf6";
             break;
           case "Personal":
-            color = "#00FF00";
+            color = "#10b981";
             break;
           case "Social":
-            color = "#D53716";
+            color = "#3b82f6";
             break;
         }
 

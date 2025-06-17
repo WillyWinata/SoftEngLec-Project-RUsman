@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/application/services"
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/domain/entities"
@@ -30,8 +29,6 @@ type UserHandler interface {
 	Update(c *gin.Context)
 	Delete(c *gin.Context)
 	GetUserFollowResponse(c *gin.Context)
-	CheckSession(c *gin.Context)
-	Logout(c *gin.Context)
 }
 
 type userHandler struct {
@@ -60,51 +57,10 @@ func (h *userHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User created"})
 }
 
-func (h *userHandler) Logout(c *gin.Context) {
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "session_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		Secure:   false,
-	})
-
-	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
-}
-
-func (h *userHandler) CheckSession(c *gin.Context) {
-	cookie, err := c.Request.Cookie("session_token")
-	if err != nil || cookie.Value == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "No valid session"})
-		return
-	}
-
-	userId, err := uuid.Parse(cookie.Value)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid session"})
-		return
-	}
-
-	user, err := h.service.GetUserByID(userId.String())
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"userId": user.Id,
-		"role":   user.Role,
-	})
-}
-
 func (h *userHandler) Login(c *gin.Context) {
 	var loginData struct {
-		Email      string `json:"email"`
-		Password   string `json:"password"`
-		RememberMe bool   `json:"rememberMe"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	if err := c.BindJSON(&loginData); err != nil {
@@ -113,36 +69,13 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.Login(loginData.Email, loginData.Password)
+	User, err := h.service.Login(loginData.Email, loginData.Password)
 	if err != nil {
-		if err == services.ErrUserNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		} else if err == services.ErrWrongPassword {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong password"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	sessionToken := user.Id.String()
-
-	cookie := &http.Cookie{
-		Name:     "session_token",
-		Value:    sessionToken,
-		Path:     "/",
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		Secure:   false,
-	}
-
-	if loginData.RememberMe {
-		cookie.Expires = time.Now().Add(30 * 24 * time.Hour)
-	}
-
-	http.SetCookie(c.Writer, cookie)
-
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, User)
 }
 
 func (h *userHandler) Get(c *gin.Context) {
@@ -162,6 +95,7 @@ func (h *userHandler) Get(c *gin.Context) {
 		Major:          user.Major,
 		ProfilePicture: user.ProfilePicture,
 		IsActive:       user.IsActive,
+		Email:          user.Email, // Tambahkan field Email
 	}
 
 	c.JSON(http.StatusOK, userResponse)

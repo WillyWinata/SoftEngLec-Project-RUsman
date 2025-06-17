@@ -11,10 +11,11 @@ import (
 
 type FollowRequestService interface {
 	CreateNewFollowRequest(req entities.FollowRequest) error
-	GetFollowRequestsByUser(userId uuid.UUID) (entities.FollowRequest, error)
+	GetFollowRequestsByUser(userId uuid.UUID) ([]entities.FollowRequest, error)
 	GetFollowRequestsByRequestee(requesteeId uuid.UUID) ([]entities.FollowRequest, error)
 	AcceptFollowRequest(requestId uuid.UUID) error
 	RejectFollowRequest(requestId uuid.UUID) error
+	CancelFollowRequest(userId, requesteeId uuid.UUID) error
 }
 
 type followRequestService struct {
@@ -38,13 +39,13 @@ func (s *followRequestService) CreateNewFollowRequest(FollowRequest entities.Fol
 	return nil
 }
 
-func (s *followRequestService) GetFollowRequestsByUser(userId uuid.UUID) (entities.FollowRequest, error) {
-	followRequest, err := s.repo.GetFollowRequestsByUser(userId)
+func (s *followRequestService) GetFollowRequestsByUser(userId uuid.UUID) ([]entities.FollowRequest, error) {
+	followRequests, err := s.repo.GetFollowRequestsByUser(userId)
 	if err != nil {
-		return entities.FollowRequest{}, err
+		return nil, err
 	}
 
-	return followRequest, nil
+	return followRequests, nil
 }
 
 func (s *followRequestService) GetFollowRequestsByRequestee(requesteeId uuid.UUID) ([]entities.FollowRequest, error) {
@@ -88,6 +89,10 @@ func (s *followRequestService) RejectFollowRequest(requestId uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (s *followRequestService) CancelFollowRequest(userId, requesteeId uuid.UUID) error {
+	return s.repo.CancelFollowRequest(userId, requesteeId)
 }
 
 func ValidateFollowRequest(FollowRequest entities.FollowRequest) bool {

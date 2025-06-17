@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/domain/entities"
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/infrastructure/database"
 	"github.com/google/uuid"
@@ -36,15 +38,25 @@ func (r *followRepository) GetFollowByUser(userId uuid.UUID) ([]entities.Follow,
 }
 
 func (r *followRepository) DeleteFollow(model entities.Follow) error {
-	return r.db.Delete(model).Error
+	result := r.db.Where("user_id = ? AND following_id = ?", model.UserId, model.FollowingId).Delete(&entities.Follow{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("follow relation not found")
+	}
+	return nil
 }
 
 func (r *followRepository) GetFollowByUserAndFollower(userId uuid.UUID, followingId uuid.UUID) (entities.Follow, error) {
 	var entity entities.Follow
 
-	err := r.db.Where("user_id = ?", userId).Where("following_id = ?", followingId).First(entity).Error
+	err := r.db.Where("user_id = ? AND following_id = ?", userId, followingId).First(&entity).Error
+	if err != nil {
+		return entity, fmt.Errorf("follow relation not found: %v", err)
+	}
 
-	return entity, err
+	return entity, nil
 }
 
 func (r *followRepository) GetFollowingByUser(userId uuid.UUID) ([]entities.Follow, error) {

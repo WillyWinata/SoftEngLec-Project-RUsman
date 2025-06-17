@@ -29,7 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Schedule, User } from "@/lib/types";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 
 // Update the interface to accept startTime and endTime props
 interface EventCreationFormProps {
@@ -41,6 +41,7 @@ interface EventCreationFormProps {
   currentUser: User;
   following: User[];
   mutualFollow: User[];
+  onEventCreated?: () => void;
 }
 
 // Sample locations
@@ -69,6 +70,7 @@ export default function EventCreationForm({
   currentUser,
   following,
   mutualFollow,
+  onEventCreated,
 }: EventCreationFormProps) {
   const [activeTab, setActiveTab] = useState("details");
   const [title, setTitle] = useState("");
@@ -86,6 +88,12 @@ export default function EventCreationForm({
   const [recurringEndDate, setRecurringEndDate] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [reminders, setReminders] = useState<string[]>(["30min"]);
+  const [errors, setErrors] = useState<{
+    title?: string;
+    date?: string;
+    time?: string;
+    category?: string;
+  }>({});
 
   // Toggle participant selection
   const toggleParticipant = (user: User) => {
@@ -114,6 +122,10 @@ export default function EventCreationForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!validateForm()) {
+      return;
+    }
+
     // Create event object
     const newEvent = {
       title,
@@ -134,25 +146,24 @@ export default function EventCreationForm({
       // createdBy: currentUser.id,
     };
 
-    const adjustTime = (time: string) => {
-      const [hours, minutes] = time.split(":").map(Number);
-      let adjustedHours = hours - 7;
-      if (adjustedHours < 0) adjustedHours += 24;
-      return `${adjustedHours.toString().padStart(2, "0")}:${minutes
-        .toString()
-        .padStart(2, "0")}`;
-    };
-
     const newSchedule: Schedule = {
-      ...newEvent,
-      id: "",
+      id: Date.now().toString(),
       userId: currentUser.id,
-      startTime: `${date}T${adjustTime(startTime)}:00`,
-      endTime: `${date}T${adjustTime(endTime)}:00`,
+      title,
+      description,
+      startTime: `${date}T${startTime}:00`,
+      endTime: `${date}T${endTime}:00`,
+      location,
+      category,
       participants: selectedParticipants,
+      recurringUntil: isRecurring ? recurringEndDate : "",
+      color: category === "Study" ? "#8b5cf6" : 
+             category === "Work" ? "#ec4899" : 
+             category === "Personal" ? "#10b981" : 
+             "#3b82f6", // Default blue for Social
     };
 
-    createEvent(newSchedule);
+    createEvent();
 
     console.log("New event:", newSchedule);
 
@@ -209,18 +220,130 @@ export default function EventCreationForm({
     }
   }, [isOpen, initialStartTime, initialEndTime, following, selectedDate]);
 
-  const createEvent = async (newEvent: Schedule) => {
-    const response = await fetch("http://localhost:8888/create-schedule", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newEvent),
-    });
+  const createEvent = async () => {
+    const newErrors: {
+      title?: string;
+      date?: string;
+      time?: string;
+      category?: string;
+    } = {};
 
-    if (response.ok) {
-      console.log("Event created successfully");
+    if (!title.trim()) {
+      newErrors.title = "Judul event harus diisi";
+      setErrors(newErrors);
+      return;
     }
+
+    // Get current date and time
+    const now = new Date();
+    const eventStartTime = new Date(`${date}T${startTime}:00`);
+    const eventEndTime = new Date(`${date}T${endTime}:00`);
+
+    // Validate start time is not in the past
+    if (eventStartTime < now) {
+      newErrors.date = "Tidak dapat membuat event di masa lalu";
+      setErrors(newErrors);
+      return;
+    }
+
+    // Validate start time is before end time
+    if (eventStartTime >= eventEndTime) {
+      newErrors.time = "Waktu selesai harus setelah waktu mulai";
+      setErrors(newErrors);
+      return;
+    }
+
+    // Assign different colors based on category
+    let eventColor = "#3b82f6"; // Default blue
+    switch (category.toLowerCase()) {
+      case "study":
+        eventColor = "#8b5cf6"; // Purple
+        break;
+      case "work":
+        eventColor = "#ec4899"; // Pink
+        break;
+      case "personal":
+        eventColor = "#10b981"; // Green
+        break;
+      case "social":
+        eventColor = "#3b82f6"; // Blue
+        break;
+      default:
+        eventColor = "#3b82f6"; // Default blue
+    }
+
+    const newSchedule: Schedule = {
+      id: Date.now().toString(),
+      userId: currentUser.id,
+      title,
+      description,
+      startTime: `${date}T${startTime}:00`,
+      endTime: `${date}T${endTime}:00`,
+      location,
+      category,
+      participants: selectedParticipants,
+      recurringUntil: isRecurring ? recurringEndDate : "",
+      color: eventColor,
+    };
+
+    try {
+      const response = await fetch("http://localhost:8888/create-schedule", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSchedule),
+      });
+
+      if (response.ok) {
+        await onEventCreated?.();
+        onClose();
+      } else {
+        newErrors.date = "Gagal membuat event";
+        setErrors(newErrors);
+      }
+    } catch (error) {
+      console.error("Error creating event:", error);
+      newErrors.date = "Gagal membuat event";
+      setErrors(newErrors);
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: {
+      title?: string;
+      date?: string;
+      time?: string;
+      category?: string;
+    } = {};
+
+    if (!title.trim()) {
+      newErrors.title = "Judul event harus diisi";
+    }
+
+    if (!date) {
+      newErrors.date = "Tanggal harus dipilih";
+    } else {
+      const now = new Date();
+      const eventStartTime = new Date(`${date}T${startTime}:00`);
+      
+      if (eventStartTime < now) {
+        newErrors.date = "Tidak dapat membuat event di masa lalu";
+      }
+    }
+
+    if (!startTime || !endTime) {
+      newErrors.time = "Waktu mulai dan selesai harus diisi";
+    } else if (startTime >= endTime) {
+      newErrors.time = "Waktu selesai harus setelah waktu mulai";
+    }
+
+    if (!category) {
+      newErrors.category = "Kategori harus dipilih";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   return (
@@ -263,7 +386,7 @@ export default function EventCreationForm({
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="details" className="space-y-5">
+            <TabsContent value="details" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-gray-200">
                   Event Title*
@@ -274,8 +397,13 @@ export default function EventCreationForm({
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Add title"
                   required
-                  className="bg-gray-800 border-gray-700 text-gray-100"
+                  className={`bg-gray-800 border-gray-700 text-gray-100 ${
+                    errors.title ? 'border-pink-500' : ''
+                  }`}
                 />
+                {errors.title && (
+                  <p className="mt-1 text-sm text-pink-500">{errors.title}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -291,69 +419,35 @@ export default function EventCreationForm({
                 />
               </div>
 
-              <div className="flex flex-row space-x-5">
-                <div className="space-y-2">
-                  <Label htmlFor="category" className="text-gray-200">
-                    Category
-                  </Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-100">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="Study" className="text-pink-300">
-                        Study
-                      </SelectItem>
-                      <SelectItem value="Work" className="text-pink-300">
-                        Work
-                      </SelectItem>
-                      <SelectItem value="Social" className="text-pink-300">
-                        Social
-                      </SelectItem>
-                      <SelectItem value="Personal" className="text-pink-300">
-                        Personal
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location" className="text-gray-200">
-                    Location
-                  </Label>
-                  <Select value={location} onValueChange={setLocation}>
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-100">
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700 max-h-[200px]">
-                      {LOCATIONS.map((loc) => (
-                        <SelectItem
-                          key={loc}
-                          value={loc}
-                          className="text-pink-300"
-                        >
-                          {loc}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-gray-200">
+                  Category
+                </Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className={`bg-gray-800 border-gray-700 text-gray-100 ${
+                    errors.category ? 'border-pink-500' : ''
+                  }`}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700">
+                    <SelectItem value="Study" className="text-pink-300">
+                      Study
+                    </SelectItem>
+                    <SelectItem value="Work" className="text-pink-300">
+                      Work
+                    </SelectItem>
+                    <SelectItem value="Social" className="text-pink-300">
+                      Social
+                    </SelectItem>
+                    <SelectItem value="Personal" className="text-pink-300">
+                      Personal
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.category && (
+                  <p className="mt-1 text-sm text-pink-500">{errors.category}</p>
+                )}
               </div>
-
-              {location === "Other" && (
-                <div className="space-y-2">
-                  <Label htmlFor="customLocation" className="text-gray-200">
-                    Custom Location
-                  </Label>
-                  <Input
-                    id="customLocation"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Enter location"
-                    className="bg-gray-800 border-gray-700 text-gray-100"
-                  />
-                </div>
-              )}
             </TabsContent>
 
             <TabsContent value="participants" className="space-y-4">
@@ -469,8 +563,13 @@ export default function EventCreationForm({
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     required
-                    className="bg-gray-800 border-gray-700 text-gray-100"
+                    className={`bg-gray-800 border-gray-700 text-gray-100 ${
+                      errors.date ? 'border-pink-500' : ''
+                    }`}
                   />
+                  {errors.date && (
+                    <p className="mt-1 text-sm text-pink-500">{errors.date}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -483,7 +582,9 @@ export default function EventCreationForm({
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     required
-                    className="bg-gray-800 border-gray-700 text-gray-100"
+                    className={`bg-gray-800 border-gray-700 text-gray-100 ${
+                      errors.time ? 'border-pink-500' : ''
+                    }`}
                   />
                 </div>
 
@@ -497,8 +598,13 @@ export default function EventCreationForm({
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     required
-                    className="bg-gray-800 border-gray-700 text-gray-100"
+                    className={`bg-gray-800 border-gray-700 text-gray-100 ${
+                      errors.time ? 'border-pink-500' : ''
+                    }`}
                   />
+                  {errors.time && (
+                    <p className="mt-1 text-sm text-pink-500">{errors.time}</p>
+                  )}
                 </div>
               </div>
 

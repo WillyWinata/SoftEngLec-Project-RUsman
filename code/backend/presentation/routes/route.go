@@ -1,11 +1,18 @@
 package routes
 
 import (
+	"fmt"
+
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/presentation/handlers"
 	"github.com/gin-gonic/gin"
 )
 
 func InitRoutes(r *gin.Engine) {
+	r.Use(func(c *gin.Context) {
+		fmt.Printf("Incoming request: %s %s\n", c.Request.Method, c.Request.URL.Path)
+		c.Next()
+	})
+
 	userHandler := handlers.NewUserHandler()
 	r.POST("/create-user", userHandler.Create)
 	r.POST("/login-user", userHandler.Login)
@@ -14,8 +21,6 @@ func InitRoutes(r *gin.Engine) {
 	r.PUT("/update-user/:id", userHandler.Update)
 	r.DELETE("/delete-user/:id", userHandler.Delete)
 	r.GET("/get-user-follow/:id", userHandler.GetUserFollowResponse)
-	r.GET("/check-session", userHandler.CheckSession)
-	r.GET("/logout", userHandler.Logout)
 
 	scheduleHandler := handlers.NewScheduleHandler()
 	r.POST("/create-schedule", scheduleHandler.Create)
@@ -31,11 +36,14 @@ func InitRoutes(r *gin.Engine) {
 
 	followHandler := handlers.NewFollowHandler()
 	r.POST("/get-follows-by-user", followHandler.GetFollowsByUser)
+	r.POST("/create-follow", followHandler.Create)
+	r.POST("/delete-follow", followHandler.Delete)
 
 	followRequestHandler := handlers.NewFollowRequestHandler()
-	r.POST("/request-follow", followRequestHandler.CreateFollowRequest)
+	r.POST("/create-follow-request", followRequestHandler.CreateFollowRequest)
 	r.POST("/get-all-requests-by-user", followRequestHandler.GetAllByUser)
 	r.POST("/get-all-requests-by-requestee", followRequestHandler.GetAllByRequestee)
 	r.PATCH("/accept-request", followRequestHandler.AcceptFollowRequest)
 	r.PATCH("/reject-request", followRequestHandler.RejectFollowRequest)
+	r.POST("/cancel-follow-request", followRequestHandler.CancelFollowRequest)
 }

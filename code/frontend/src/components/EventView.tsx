@@ -50,72 +50,55 @@ export default function EventView({
   const [allEvents, setAllEvents] = useState<Schedule[]>([]);
   const [invitedEvents, setInvitedEvents] = useState<ScheduleInvitation[]>([]);
 
-  useEffect(() => {
-    const lower = searchQuery.toLowerCase();
-    setMyEvents(
-      allEvents.filter(
+  const refreshEvents = async () => {
+    try {
+      const [acceptedSchedules, mySchedules, invitedSchedules] = await Promise.all([
+        fetch("http://localhost:8888/get-schedules-accepted-by-user/" + currentUser.id).then(res => res.json()),
+        fetch("http://localhost:8888/get-schedules", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: currentUser.id })
+        }).then(res => res.json()),
+        fetch("http://localhost:8888/get-schedules-request-by-schedule/" + currentUser.id).then(res => res.json())
+      ]);
+
+      setUpcomingEvents(acceptedSchedules);
+      setAllEvents(mySchedules);
+      setInvitedEvents(invitedSchedules);
+
+      // Filter events based on search query
+      const lower = searchQuery.toLowerCase();
+      const filteredEvents = mySchedules.filter(
         (ev) =>
           ev.title.toLowerCase().includes(lower) ||
           ev.description.toLowerCase().includes(lower)
-      )
-    );
-  }, [searchQuery, allEvents]);
+      );
+      setMyEvents(filteredEvents);
+      
+      setActiveTab("created"); // Switch to 'created' tab after refresh
+    } catch (error) {
+      console.error("Error refreshing events:", error);
+    }
+  };
 
+  // Initial load and refresh when user changes
   useEffect(() => {
-    const getSchedulesAcceptedByUser = async () => {
-      const response = await fetch(
-        "http://localhost:8888/get-schedules-accepted-by-user/" +
-          currentUser.id,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      setUpcomingEvents(data);
-    };
-
-    const getMyEvents = async () => {
-      const response = await fetch("http://localhost:8888/get-schedules", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: currentUser.id,
-        }),
-      });
-
-      const data = await response.json();
-      setAllEvents(data);
-      setMyEvents(data);
-    };
-
-    const getInvitedEvents = async () => {
-      const response = await fetch(
-        "http://localhost:8888/get-schedules-request-by-schedule/" +
-          currentUser.id,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const data = await response.json();
-      console.log(data);
-      setInvitedEvents(data);
-    };
-
-    getSchedulesAcceptedByUser();
-    getMyEvents();
-    getInvitedEvents();
+    refreshEvents();
   }, [currentUser.id]);
+
+  // Update filtered events when search query changes
+  useEffect(() => {
+    if (allEvents.length > 0) {
+      const lower = searchQuery.toLowerCase();
+      setMyEvents(
+        allEvents.filter(
+          (ev) =>
+            ev.title.toLowerCase().includes(lower) ||
+            ev.description.toLowerCase().includes(lower)
+        )
+      );
+    }
+  }, [searchQuery, allEvents]);
 
   return (
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
@@ -307,6 +290,7 @@ export default function EventView({
         currentUser={currentUser}
         following={following}
         mutualFollow={mutualFollow}
+        onEventCreated={refreshEvents}
       />
     </Card>
   );

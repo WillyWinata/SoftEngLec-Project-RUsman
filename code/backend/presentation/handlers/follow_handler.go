@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/application/services"
@@ -23,6 +24,8 @@ import (
 type FollowHandler interface {
 	Follow(c *gin.Context)
 	GetFollowsByUser(c *gin.Context)
+	Create(c *gin.Context) // Tambahkan method Create ke interface
+	Delete(c *gin.Context)
 }
 
 type followHandler struct {
@@ -70,4 +73,63 @@ func (h *followHandler) GetFollowsByUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, follows)
+}
+
+func (h *followHandler) Create(c *gin.Context) {
+	var follow entities.Follow
+
+	if err := c.ShouldBindJSON(&follow); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	// Generate UUID jika belum ada
+	if follow.Id == uuid.Nil {
+		follow.Id = uuid.New()
+	}
+
+	if err := h.service.Follow(follow); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Follow created"})
+}
+
+func (h *followHandler) Delete(c *gin.Context) {
+	type DeleteFollowRequest struct {
+		UserId      string `json:"userId"`
+		FollowingId string `json:"followingId"`
+	}
+
+	var req DeleteFollowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format: " + err.Error()})
+		return
+	}
+
+	fmt.Printf("Received unfollow request: %+v\n", req)
+
+	userUUID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid userId format: " + err.Error()})
+		return
+	}
+	followingUUID, err := uuid.Parse(req.FollowingId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid followingId format: " + err.Error()})
+		return
+	}
+
+	fmt.Printf("Attempting to unfollow: userId=%s followingId=%s\n", userUUID, followingUUID)
+
+	err = h.service.Unfollow(userUUID, followingUUID)
+	if err != nil {
+		fmt.Printf("Error during unfollow: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	fmt.Printf("Successfully unfollowed: userId=%s followingId=%s\n", userUUID, followingUUID)
+	c.JSON(http.StatusOK, gin.H{"message": "Unfollow success"})
 }
