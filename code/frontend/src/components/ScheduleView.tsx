@@ -23,6 +23,7 @@ import ScheduleLegend from "@/components/ScheduleLegend";
 import CommonFreeTime from "@/components/CommonFreeTime";
 import GroupWorkRecommendations from "@/components/GroupWorkRecommendation";
 import EventCreationForm from "@/components/EventCreationForm";
+import ScheduleDetailPopup from "./ScheduleDetailPopup";
 import {
   Select,
   SelectContent,
@@ -75,6 +76,11 @@ export default function ScheduleView({
   const [showEventForm, setShowEventForm] = useState(false);
   const [initialScrollDone, setInitialScrollDone] = useState(false);
 
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<
+    (Schedule & { user?: User }) | null
+  >(null);
+
   // Refs untuk auto‐scroll
   const weekScrollRef = useRef<HTMLDivElement>(null);
   const dayScrollRef = useRef<HTMLDivElement>(null);
@@ -124,6 +130,16 @@ export default function ScheduleView({
     const timer = setTimeout(scrollToCurrentTime, 100);
     return () => clearTimeout(timer);
   }, [currentView, currentDate, initialScrollDone]);
+
+  // == popup detail handlers ==
+  const handleEventClick = (event: Schedule & { user?: User }) => {
+    setSelectedEvent(event);
+    setShowDetailPopup(true);
+  };
+  const handleEventDeleted = (deletedId: string) => {
+    setShowDetailPopup(false);
+    setSelectedEvent(null);
+  };
 
   // Navigasi “Today”, “<-“, “->”
   const goToToday = () => {
@@ -370,6 +386,7 @@ export default function ScheduleView({
                   key={idx}
                   className="text-xs truncate rounded px-1 py-0.5 text-white"
                   style={{ backgroundColor: ev.color + "66" }}
+                  onClick={() => handleEventClick(ev)}
                 >
                   {ev.title.split(":")[1] || ev.title}
                 </div>
@@ -538,6 +555,7 @@ export default function ScheduleView({
                             left: `${leftPercent}%`,
                             backgroundColor: ev.color + "33",
                           }}
+                          onClick={() => handleEventClick(ev)}
                         >
                           <div className="p-1 text-xs">
                             <div
@@ -664,6 +682,7 @@ export default function ScheduleView({
                         key={`${ev.id}-${idx}`}
                         className="absolute inset-2 rounded overflow-hidden flex flex-col"
                         style={{ backgroundColor: ev.color + "33" }}
+                        onClick={() => handleEventClick(ev)}
                       >
                         <div
                           className="h-1.5 w-full"
@@ -915,7 +934,13 @@ export default function ScheduleView({
           </div>
         </CardContent>
       </Card>
-
+      <ScheduleDetailPopup
+        isOpen={showDetailPopup}
+        onClose={() => setShowDetailPopup(false)}
+        event={selectedEvent}
+        currentUser={currentUser}
+        onDeleted={() => selectedEvent && handleEventDeleted(selectedEvent.id)}
+      />
       {/* Event Creation Form */}
       <EventCreationForm
         isOpen={showEventForm}
