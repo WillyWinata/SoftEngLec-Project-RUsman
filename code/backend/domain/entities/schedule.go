@@ -15,6 +15,8 @@ type Schedule struct {
 	Description string    `gorm:"not null" json:"description"`
 	Location    string    `gorm:"not null" json:"location"`
 	Category    string    `gorm:"not null" json:"category"`
+	RecurringUntil *time.Time `json:"recurringUntil"` // opsional, nullable
+	Color       string    `json:"color"`
 }
 
 type ScheduleParticipant struct {
