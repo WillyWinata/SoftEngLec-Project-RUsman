@@ -23,6 +23,7 @@ import CommonFreeTime from "@/components/CommonFreeTime";
 import GroupWorkRecommendations from "@/components/GroupWorkRecommendation";
 import EventCreationForm from "@/components/EventCreationForm";
 import ScheduleLegend from "@/components/ScheduleLegend";
+import ScheduleDetailPopup from "./ScheduleDetailPopup";
 import {
   Select,
   SelectContent,
@@ -74,6 +75,10 @@ export default function ScheduleView({
 }: ScheduleViewProps) {
   const [showEventForm, setShowEventForm] = useState(false);
   const [initialScrollDone, setInitialScrollDone] = useState(false);
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<
+    (Schedule & { user?: User }) | null
+  >(null);
   const [localSchedules, setLocalSchedules] = useState(schedules);
 
   // Refs untuk auto‐scroll
@@ -416,6 +421,7 @@ export default function ScheduleView({
                   key={idx}
                   className="text-xs truncate rounded px-1 py-0.5 text-white"
                   style={{ backgroundColor: ev.color + "66" }}
+                  onClick={() => handleEventClick(ev)}
                 >
                   {ev.title.split(":")[1] || ev.title}
                 </div>
@@ -514,10 +520,11 @@ export default function ScheduleView({
                     {/* 1) Render baris slot jam sebagai background */}
                     {TIME_SLOTS.map((time) => {
                       // cek apakah ini slot jam saat ini (red line)
+                      const now = new Date();Add commentMore actions
+                      const jakartaHour = (now.getUTCHours() + 7) % 24;
+                      const jakartaMinute = now.getUTCMinutes();
                       const isCurrentSlot =
-                        isToday(columnDate) &&
-                        new Date().getHours() ===
-                          Number.parseInt(time.split(":")[0], 10);
+                        isToday(columnDate) && jakartaHour === Number.parseInt(time.split(":")[0], 10);
 
                       return (
                         <div
@@ -530,7 +537,10 @@ export default function ScheduleView({
                             <div
                               className="absolute left-0 right-0 border-t-2 border-pink-500 z-10"
                               style={{
-                                top: `${(new Date().getMinutes() / 60) * 100}%`,
+                                top: `${
+                                  ((jakartaHour + jakartaMinute / 60) / 24) *
+                                  100
+                                }%`,
                               }}
                             >
                               <div className="absolute -left-1 -top-1.5 w-2 h-2 rounded-full bg-pink-500"></div>
@@ -855,7 +865,7 @@ export default function ScheduleView({
                         setCurrentDate(newDate);
                       }}
                     >
-                      <SelectTrigger className="w-[4.5rem] h-8 border-gray-700 bg-gray-800 text-white">
+                      <SelectTrigger className="w-[7rem] h-8 border-gray-700 bg-gray-800 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-700">
