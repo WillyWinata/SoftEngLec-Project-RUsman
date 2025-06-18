@@ -22,7 +22,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState({
     email: "",
     password: "",
-    other: "",
+    other: "", // <-- BARU: untuk error selain email/password (misal account doesn't exist)
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,8 +46,12 @@ export function LoginForm() {
     if (!formData.email) {
       newErrors.email = "Email is required";
       valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email is invalid";
+      valid = false;
     } else if (!formData.email.endsWith("@binus.ac.id")) {
-      newErrors.email = "Email must end with @binus.ac.id";
+      // <-- BARU: validasi @binus.ac.id
+      newErrors.email = "Email must be a @binus.ac.id account";
       valid = false;
     }
 
@@ -78,7 +82,7 @@ export function LoginForm() {
 
       // BARU: Handle error jika account tidak ditemukan
       if (response.status === 404) {
-        setErrors({ email: "", password: "", other: "Invalid credentials!" });
+        setErrors({ email: "", password: "Wrong Password", other: "" });
         setIsLoading(false);
         return;
       }
