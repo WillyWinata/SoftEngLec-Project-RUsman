@@ -42,14 +42,33 @@ func NewUserHandler() UserHandler {
 }
 
 func (h *userHandler) Create(c *gin.Context) {
-	var User entities.User
+	var registerRequest struct {
+		Id             string `json:"id"`
+		Name           string `json:"name"`
+		StudentId      string `json:"studentId"`
+		Email          string `json:"email"`
+		Password       string `json:"password"`
+		Role           string `json:"role"`
+		Major          string `json:"major"`
+		ProfilePicture string `json:"profilePicture"`
+		IsActive       bool   `json:"isActive"`
+	}
 
-	if err := c.ShouldBindJSON(&User); err != nil {
+	if err := c.ShouldBindJSON(&registerRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 		return
 	}
 
-	if err := h.service.CreateNewUser(User); err != nil {
+	if err := h.service.CreateNewUser(entities.User{
+		Name:           registerRequest.Name,
+		StudentId:      registerRequest.StudentId,
+		Email:          registerRequest.Email,
+		Password:       registerRequest.Password,
+		Role:           registerRequest.Role,
+		Major:          registerRequest.Major,
+		ProfilePicture: registerRequest.ProfilePicture,
+		IsActive:       registerRequest.IsActive,
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -130,9 +149,9 @@ func (h *userHandler) Update(c *gin.Context) {
 }
 
 func (h *userHandler) Delete(c *gin.Context) {
-	id := c.Param("id")
+	email := c.Param("email")
 
-	if err := h.service.DeleteUser(id); err != nil {
+	if err := h.service.DeleteUser(email); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -694,6 +694,7 @@ export default function ScheduleView({
                       }),
                     ).map((ev) => {
                       const isHovered = hoveredEventId === ev.id
+                      
                       return (
                         <div
                           key={`${ev.id}-${slotH}`}
