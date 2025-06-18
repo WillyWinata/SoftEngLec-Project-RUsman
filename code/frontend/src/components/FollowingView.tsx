@@ -167,7 +167,6 @@ export default function FollowingView({
           throw new Error('Failed to cancel follow request');
         }
 
-        alert('Follow request dibatalkan!');
         getPendingRequests();
         return;
       }
@@ -186,13 +185,10 @@ export default function FollowingView({
       if (!response.ok) {
         throw new Error('Failed to send follow request');
       }
-
-      alert('Follow request berhasil dikirim!');
       getPendingRequests();
 
     } catch (error) {
       console.error('Error sending/cancelling follow request:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
     }
   };
 
@@ -211,11 +207,9 @@ export default function FollowingView({
       if (!response.ok) {
         throw new Error('Gagal menolak permintaan');
       }
-      alert('Permintaan ditolak!');
       getPendingReceived();
     } catch (error) {
       console.error('Error rejecting request:', error);
-      alert('Terjadi kesalahan saat menolak permintaan.');
     }
   };
 
@@ -248,11 +242,10 @@ export default function FollowingView({
       if (!deleteResponse.ok) {
         throw new Error('Gagal menghapus follow request');
       }
-      alert('Permintaan diterima!');
       getPendingReceived();
+      getFollowingList();
     } catch (error) {
       console.error('Error accepting request:', error);
-      alert('Terjadi kesalahan saat menerima permintaan.');
     }
   };
 
@@ -272,21 +265,9 @@ export default function FollowingView({
       
       const responseData = await response.json();
 
-      if (!response.ok) {
-        let errorMsg = 'Gagal unfollow';
-        if (responseData && responseData.error) {
-          errorMsg += ': ' + responseData.error;
-          console.error('Unfollow error from server:', responseData.error);
-        }
-        alert(errorMsg);
-        return;
-      }
-
-      alert('Berhasil unfollow!');
       await getFollowingList(); // Refresh following list
     } catch (error: any) {
       console.error('Error detail saat unfollow:', error);
-      alert('Terjadi kesalahan saat unfollow: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -316,11 +297,9 @@ export default function FollowingView({
         return;
       }
 
-      alert('Removed follower!');
       await getFollowingList(); // Refresh following list
     } catch (error: any) {
       console.error('Error detail saat unfollow:', error);
-      alert('Terjadi kesalahan saat unfollow: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -339,6 +318,7 @@ export default function FollowingView({
   const filteredPending = filterStudents(pendingReceived);
   const filteredDiscoverable = filterStudents(discoverableStudents);
   const filteredFollowers = filterStudents(followersList);
+  const filteredPendingRequests = filterStudents(pendingReceivedRequests);
 
   return (
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
@@ -362,7 +342,7 @@ export default function FollowingView({
               className="data-[state=active]:bg-pink-900 data-[state=active]:text-white"
             >
               <UserPlus className="h-4 w-4 mr-2" />
-              Pending ({filteredPending.length})
+              Pending ({filteredPendingRequests.length})
             </TabsTrigger>
             <TabsTrigger
               value="discover"
@@ -464,8 +444,8 @@ export default function FollowingView({
 
           <TabsContent value="pending" className="mt-0">
             <div className="flex flex-col gap-4">
-              {pendingReceivedRequests && pendingReceivedRequests.length > 0 ? (
-                pendingReceivedRequests.map((student) => (
+              {filteredPendingRequests && filteredPendingRequests.length > 0 ? (
+                filteredPendingRequests.map((student) => (
                   <div key={student.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <img
