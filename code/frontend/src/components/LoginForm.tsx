@@ -22,7 +22,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState({
     email: "",
     password: "",
-    other: "", // <-- BARU: untuk error selain email/password (misal account doesn't exist)
+    other: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,12 +46,8 @@ export function LoginForm() {
     if (!formData.email) {
       newErrors.email = "Email is required";
       valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-      valid = false;
     } else if (!formData.email.endsWith("@binus.ac.id")) {
-      // <-- BARU: validasi @binus.ac.id
-      newErrors.email = "Email must be a @binus.ac.id account";
+      newErrors.email = "Email must end with @binus.ac.id";
       valid = false;
     }
 
@@ -82,7 +78,7 @@ export function LoginForm() {
 
       // BARU: Handle error jika account tidak ditemukan
       if (response.status === 404) {
-        setErrors({ email: "", password: "", other: "Account doesn't exist." });
+        setErrors({ email: "", password: "Wrong Password", other: "" });
         setIsLoading(false);
         return;
       }
@@ -196,24 +192,6 @@ export function LoginForm() {
           {errors.other && (
             <div className="text-red-400 text-sm mt-1">{errors.other}</div>
           )}
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="remember"
-                className="h-4 w-4 rounded border-pink-700 bg-gray-800 text-pink-600 focus:ring-pink-500"
-              />
-              <Label htmlFor="remember" className="text-sm text-pink-300">
-                Remember me
-              </Label>
-            </div>
-            <a
-              href="#"
-              className="text-sm font-medium text-pink-400 hover:text-pink-300"
-            >
-              Forgot password?
-            </a>
-          </div>
 
           <Button
             type="submit"

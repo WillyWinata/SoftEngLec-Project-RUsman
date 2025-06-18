@@ -415,13 +415,6 @@ export default function FollowingView({
                     </div>
                     <div className="flex space-x-2">
                       <Button
-                        size="sm"
-                        onClick={() => navigate(`/schedule/${student.id}`)}
-                        className="bg-gray-700 hover:bg-gray-600"
-                      >
-                        View Schedule
-                      </Button>
-                      <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => handleUnfollow(student.id)}

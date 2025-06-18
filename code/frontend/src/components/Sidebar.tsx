@@ -99,7 +99,7 @@ export default function Sidebar({
         <button
           onClick={() => setActiveTab("following")}
           className={`flex items-center space-x-3 p-3 rounded-lg transition-colors w-full text-left ${
-            activeTab === "following"
+            ["following", "pending", "discover", "followers"].includes(activeTab)
               ? "bg-pink-900/50 text-pink-100"
               : "text-gray-300 hover:bg-gray-800 hover:text-white"
           }`}
