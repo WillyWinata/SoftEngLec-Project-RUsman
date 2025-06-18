@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Users, UserPlus } from "lucide-react";
+import { Search, Users, UserPlus, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +34,7 @@ export default function FollowingView({
   const [pendingRequests, setPendingRequests] = useState<{ [key: string]: boolean }>({});
   const [pendingReceived, setPendingReceived] = useState<User[]>([]);
   const [pendingReceivedRequests, setPendingReceivedRequests] = useState<any[]>([]);
+  const [followersList, setFollowersList] = useState<User[]>([]);
 
   const user = localStorage.getItem("user");
   const userId = user ? JSON.parse(user).id : null;
@@ -65,10 +66,12 @@ export default function FollowingView({
       if (!response.ok) throw new Error('Failed to fetch following list');
       const result = await response.json();
       setFollowingList(result.following || []);
+      setFollowersList(result.follower || []);
     } catch (error) {
       console.error('Error fetching following list:', error);
     }
   };
+
 
   const getPendingRequests = async () => {
     try {
@@ -133,26 +136,22 @@ export default function FollowingView({
     getPendingReceived();
   }, []);
 
-  // Tambahkan useEffect untuk memperbarui status pending secara berkala
   useEffect(() => {
     const interval = setInterval(() => {
       getPendingRequests();
       getPendingReceived();
-    }, 5000); // Check setiap 5 detik
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Handle follow/unfollow action
   const handleFollowToggle = async (studentId: string) => {
     try {
-      // Jika sudah following, jangan lakukan apa-apa
       if (followingList.some(f => f.id === studentId)) {
         return;
       }
 
       if (pendingRequests[studentId]) {
-        // Jika status pending, cancel request
         const response = await fetch("http://localhost:8888/cancel-follow-request", {
           method: "POST",
           headers: {
@@ -173,8 +172,6 @@ export default function FollowingView({
         return;
       }
 
-      // Jika belum following dan belum pending, kirim follow request
-      console.log('Kirim follow request:', { userId, requesteeId: studentId });
       const response = await fetch("http://localhost:8888/create-follow-request", {
         method: "POST",
         headers: {
@@ -199,7 +196,6 @@ export default function FollowingView({
     }
   };
 
-  // Reject follow request
   const handleRejectRequest = async (requestUserId: string) => {
     try {
       const response = await fetch("http://localhost:8888/cancel-follow-request", {
@@ -223,10 +219,8 @@ export default function FollowingView({
     }
   };
 
-  // Accept follow request
   const handleAcceptRequest = async (requestUserId: string) => {
     try {
-      // 1. Tambahkan ke tabel follows
       const followResponse = await fetch("http://localhost:8888/create-follow", {
         method: "POST",
         headers: {
@@ -262,27 +256,21 @@ export default function FollowingView({
     }
   };
 
-  // Unfollow action
   const handleUnfollow = async (followingId: string) => {
     try {
-      console.log('Attempting to unfollow user:', { userId, followingId });
-      
       const response = await fetch("http://localhost:8888/delete-follow", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: userId,      // user yang melakukan unfollow (yang login)
-          followingId: followingId, // user yang di-unfollow
+          userId: userId,
+          followingId: followingId,
         }),
       });
 
-      // Log response status
-      console.log('Unfollow response status:', response.status);
       
       const responseData = await response.json();
-      console.log('Unfollow response data:', responseData);
 
       if (!response.ok) {
         let errorMsg = 'Gagal unfollow';
@@ -302,7 +290,40 @@ export default function FollowingView({
     }
   };
 
-  // Filter students based on search query and major
+  const handleRemoveFollower = async (followerId: string) => {
+    try {
+      const response = await fetch("http://localhost:8888/delete-follow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: followerId,
+          followingId: userId,
+        }),
+      });
+
+      
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        let errorMsg = 'Failed to remove follower';
+        if (responseData && responseData.error) {
+          errorMsg += ': ' + responseData.error;
+          console.error('Unfollow error from server:', responseData.error);
+        }
+        alert(errorMsg);
+        return;
+      }
+
+      alert('Removed follower!');
+      await getFollowingList(); // Refresh following list
+    } catch (error: any) {
+      console.error('Error detail saat unfollow:', error);
+      alert('Terjadi kesalahan saat unfollow: ' + (error?.message || 'Unknown error'));
+    }
+  };
+
   const filterStudents = (students: User[]) => {
     return students.filter((student) => {
       const matchesSearch =
@@ -317,6 +338,7 @@ export default function FollowingView({
   const filteredFollowing = filterStudents(followingList);
   const filteredPending = filterStudents(pendingReceived);
   const filteredDiscoverable = filterStudents(discoverableStudents);
+  const filteredFollowers = filterStudents(followersList);
 
   return (
     <Card className="border-gray-800 bg-gray-950 text-gray-100 shadow-xl overflow-clip">
@@ -349,9 +371,15 @@ export default function FollowingView({
               <Search className="h-4 w-4 mr-2" />
               Discover
             </TabsTrigger>
+            <TabsTrigger
+              value="followers"
+              className="data-[state=active]:bg-pink-900 data-[state=active]:text-white"
+            >
+              <UserMinus className="h-4 w-4 mr-2" />
+              Followers ({filteredFollowers.length})
+            </TabsTrigger>
           </TabsList>
 
-          {/* Search and filter controls - shared between tabs */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
@@ -407,7 +435,8 @@ export default function FollowingView({
                     </div>
                     <div className="flex space-x-2">
                       <Button
-                        size="sm"                        onClick={() => navigate(`/schedule/${student.id}`)}
+                        size="sm"
+                        onClick={() => navigate(`/schedule/${student.id}`)}
                         className="bg-gray-700 hover:bg-gray-600"
                       >
                         View Schedule
@@ -536,6 +565,48 @@ export default function FollowingView({
                   {searchQuery || major !== "All Majors"
                     ? "No students match your search criteria"
                     : "No more students to discover"}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="followers" className="mt-0">
+            <div className="flex flex-col gap-4">
+              {filteredFollowers && filteredFollowers.length > 0 ? (
+                filteredFollowers.map((student) => (
+                  <div key={student.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={student.profilePicture || "/default-avatar.png"}
+                        alt={student.name}
+                        className="w-10 h-10 rounded-full bg-gray-700"
+                      />
+                      <div>
+                        <h3 className="font-medium text-white">
+                          {student.name}
+                        </h3>
+                        <p className="text-sm text-gray-400">{student.email}</p>
+                        <div className="text-xs text-gray-500">
+                          {student.major} • {student.studentId}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleRemoveFollower(student.id)}
+                        className="bg-pink-900 hover:bg-pink-800"
+                      >
+                        Remove as Follower
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  {searchQuery || major !== "All Majors"
+                    ? "No students match your search criteria"
+                    : "You have no followers yet"}
                 </div>
               )}
             </div>

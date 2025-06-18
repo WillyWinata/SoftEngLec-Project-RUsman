@@ -26,6 +26,7 @@ type FollowHandler interface {
 	GetFollowsByUser(c *gin.Context)
 	Create(c *gin.Context) // Tambahkan method Create ke interface
 	Delete(c *gin.Context)
+	GetUserFollowers(c *gin.Context)
 }
 
 type followHandler struct {
@@ -83,7 +84,6 @@ func (h *followHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Generate UUID jika belum ada
 	if follow.Id == uuid.Nil {
 		follow.Id = uuid.New()
 	}
@@ -132,4 +132,29 @@ func (h *followHandler) Delete(c *gin.Context) {
 
 	fmt.Printf("Successfully unfollowed: userId=%s followingId=%s\n", userUUID, followingUUID)
 	c.JSON(http.StatusOK, gin.H{"message": "Unfollow success"})
+}
+
+func (h *followHandler) GetUserFollowers(c *gin.Context) {
+	type GetUserFollowersRequest struct {
+		UserId string `json:"userId"`
+	}
+
+	var req GetUserFollowersRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	userId, err := uuid.Parse(req.UserId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid userId format"})
+		return
+	}
+	followers, err := h.service.GetFollowersByUser(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"followers": followers})
 }

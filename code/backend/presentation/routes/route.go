@@ -38,6 +38,7 @@ func InitRoutes(r *gin.Engine) {
 	r.POST("/get-follows-by-user", followHandler.GetFollowsByUser)
 	r.POST("/create-follow", followHandler.Create)
 	r.POST("/delete-follow", followHandler.Delete)
+	r.POST("/get-followers-by-user", followHandler.GetUserFollowers)
 
 	followRequestHandler := handlers.NewFollowRequestHandler()
 	r.POST("/create-follow-request", followRequestHandler.CreateFollowRequest)
