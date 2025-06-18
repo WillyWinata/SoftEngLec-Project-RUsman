@@ -22,6 +22,9 @@ export interface Schedule {
   participants: User[];
   recurringUntil: string;
   color: string;
+  date?: string; // format: YYYY-MM-DD
+  week?: number; // optional, for weekly grouping
+  day?: string; // optional, for day of week (Mon, Tue, ...)
 }
 
 export interface ScheduleInvitation {

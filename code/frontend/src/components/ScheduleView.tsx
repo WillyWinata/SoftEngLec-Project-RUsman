@@ -19,8 +19,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import type { User, Schedule } from "@/lib/types"
-import CommonFreeTime from "@/components/CommonFreeTime"
-import GroupWorkRecommendations from "@/components/GroupWorkRecommendation"
 import EventCreationForm from "@/components/EventCreationForm"
 import ScheduleLegend from "@/components/ScheduleLegend"
 import ScheduleDetailPopup from "./ScheduleDetailPopup"
@@ -916,24 +914,9 @@ export default function ScheduleView({
             {currentView === "day" && renderDayView()}
           </div>
 
-          {/* Legend, Common Free Time, and Group Work Recommendations */}
+          {/* Legend only, removed CommonFreeTime and GroupWorkRecommendations */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-t border-gray-800">
             <ScheduleLegend />
-            {selectedFriends.length > 0 && (
-              <>
-                <CommonFreeTime
-                  userSchedule={[schedules[0]]}
-                  friendSchedules={schedules.filter((s) => s.userId !== "user-1")}
-                  selectedFriends={selectedFriends}
-                />
-                <GroupWorkRecommendations
-                  userSchedule={schedules}
-                  friendSchedules={schedules.filter((s) => s.userId !== "user-1")}
-                  selectedFriends={selectedFriends}
-                  onTimeSlotClick={handleGroupWorkTimeSlotClick}
-                />
-              </>
-            )}
           </div>
         </CardContent>
       </Card>
