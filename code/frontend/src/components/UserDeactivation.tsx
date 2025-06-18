@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
-import { deactivateUser } from "@/lib/user-action";
 
 export function UserDeactivation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,11 +26,16 @@ export function UserDeactivation() {
     setMessage(null);
 
     try {
-      const formData = new FormData();
-      formData.append("email", emailToDeactivate);
+      const res = await fetch("http://localhost:8888/delete-user/" + emailToDeactivate, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
 
-      const result = await deactivateUser(formData);
-      if (result.success) {
+      const result = await res.json();
+
+      console.log(result);
+
+      if (result.message === "User deleted") {
         setMessage({
           type: "success",
           text: "User account deactivated successfully!",

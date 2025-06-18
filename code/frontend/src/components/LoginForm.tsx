@@ -78,14 +78,18 @@ export function LoginForm() {
 
       // BARU: Handle error jika account tidak ditemukan
       if (response.status === 404) {
-        setErrors({ email: "", password: "Wrong Password", other: "" });
+        setErrors({ email: "", password: "", other: "Invalid credentials!" });
         setIsLoading(false);
         return;
       }
 
       // BARU: Handle error jika password salah
       if (response.status === 401) {
-        setErrors({ email: "", password: "Wrong password.", other: "" });
+        setErrors({
+          email: "",
+          password: "Wrong password.",
+          other: "Invalid credentials!",
+        });
         setIsLoading(false);
         return;
       }
@@ -120,7 +124,7 @@ export function LoginForm() {
 
   return (
     <Card className="border-pink-800 bg-gray-900 shadow-lg">
-      <CardContent className="pt-6">
+      <CardContent className="pt-0">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-pink-400">
@@ -195,7 +199,7 @@ export function LoginForm() {
 
           <Button
             type="submit"
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+            className="w-full bg-pink-600 hover:bg-pink-700 text-white mt-3"
             disabled={isLoading}
           >
             {isLoading ? "Signing in..." : "Sign in"}

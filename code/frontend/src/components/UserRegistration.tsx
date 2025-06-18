@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
-import { registerUser } from "@/lib/user-action";
+import { createClient } from "@supabase/supabase-js";
 
 const academicMajors = [
   "Computer Science",
@@ -50,31 +50,115 @@ export function UserRegistration() {
     }
   };
 
-  const handleSubmit = async (formData: FormData) => {
+  // ✅ Supabase Setup
+  const supabaseUrl = "https://lneeoekvbhpekkzmvlwz.supabase.co";
+  const supabaseKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxuZWVvZWt2YmhwZWtrem12bHd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg3OTczMzksImV4cCI6MjA2NDM3MzMzOX0.oZUT7KUHMsr7PKBWZnu3Xm098J0SjxwinJvaodhBg1M";
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  async function uploadImage(file: File): Promise<string | null> {
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from("medias")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Upload error:", error.message);
+      return null;
+    }
+
+    const { data } = supabase.storage.from("medias").getPublicUrl(filePath);
+    return data.publicUrl;
+  }
+
+  async function registerStudent(formData: FormData, file?: File | null) {
+    let profilePictureUrl = "";
+
+    // ✅ Upload image if file exists
+    if (file) {
+      const uploadedUrl = await uploadImage(file);
+      if (!uploadedUrl) throw new Error("Image upload failed");
+      profilePictureUrl = uploadedUrl;
+    }
+
+    const dto = {
+      id: "",
+      name: formData.get("fullName") as string,
+      studentId: formData.get("studentId") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      role: "User",
+      major: formData.get("major") as string,
+      profilePicture: profilePictureUrl,
+      isActive: true,
+    };
+
+    const res = await fetch("http://localhost:8888/register-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dto),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      setMessage({ type: "error", text: err.error });
+      throw new Error(err.error || "Registration failed");
+    }
+
+    return true;
+  }
+
+  // ✅ Form Submit Handler
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setIsSubmitting(true);
     setMessage(null);
 
+    const formData = new FormData(e.currentTarget);
+    const fullName = formData.get("fullName")?.toString().trim();
+    const email = formData.get("email")?.toString().trim();
+    const password = formData.get("password")?.toString();
+    const confirmPassword = formData.get("confirmPassword")?.toString();
+    const major = formData.get("major")?.toString();
+    const studentId = formData.get("studentId")?.toString().trim();
+
+    // ✅ Validation
+    if (
+      !fullName ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !major ||
+      !studentId
+    ) {
+      setMessage({ type: "error", text: "There must not be an empty field!" });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!email.endsWith("@binus.ac.id")) {
+      setMessage({ type: "error", text: "Email must end with @binus.ac.id" });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setMessage({ type: "error", text: "Passwords do not match." });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const result = await registerUser(formData);
-      if (result.success) {
-        setMessage({ type: "success", text: "User registered successfully!" });
-        // Reset form
-        const form = document.getElementById(
-          "registration-form"
-        ) as HTMLFormElement;
-        form?.reset();
-        setSelectedFile(null);
-      } else {
-        setMessage({
-          type: "error",
-          text: result.error || "Registration failed",
-        });
-      }
-    } catch (error) {
-      setMessage({
-        type: "error",
-        text: "An unexpected error occurred: " + error,
-      });
+      await registerStudent(formData, selectedFile);
+      setMessage({ type: "success", text: "User registered successfully!" });
+      e.currentTarget.reset();
+      setSelectedFile(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -85,7 +169,7 @@ export function UserRegistration() {
       <CardContent className="p-6">
         <form
           id="registration-form"
-          action={handleSubmit}
+          onSubmit={handleSubmit}
           className="space-y-4"
         >
           {/* Full Name */}
@@ -97,7 +181,6 @@ export function UserRegistration() {
               id="fullName"
               name="fullName"
               type="text"
-              required
               className="bg-black/50 border-pink-500/50 text-white placeholder:text-pink-300/50 focus:border-pink-400"
               placeholder="Enter full name"
             />
@@ -112,7 +195,6 @@ export function UserRegistration() {
               id="email"
               name="email"
               type="email"
-              required
               className="bg-black/50 border-pink-500/50 text-white placeholder:text-pink-300/50 focus:border-pink-400"
               placeholder="Enter email address"
             />
@@ -128,7 +210,6 @@ export function UserRegistration() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                required
                 className="bg-black/50 border-pink-500/50 text-white placeholder:text-pink-300/50 focus:border-pink-400 pr-10"
                 placeholder="Enter password"
               />
@@ -158,7 +239,6 @@ export function UserRegistration() {
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                required
                 className="bg-black/50 border-pink-500/50 text-white placeholder:text-pink-300/50 focus:border-pink-400 pr-10"
                 placeholder="Confirm password"
               />
@@ -183,7 +263,7 @@ export function UserRegistration() {
             <Label htmlFor="major" className="text-pink-100">
               Academic Major
             </Label>
-            <Select name="major" required>
+            <Select name="major">
               <SelectTrigger className="bg-black/50 border-pink-500/50 text-white focus:border-pink-400">
                 <SelectValue placeholder="Select academic major" />
               </SelectTrigger>
@@ -210,7 +290,6 @@ export function UserRegistration() {
               id="studentId"
               name="studentId"
               type="text"
-              required
               className="bg-black/50 border-pink-500/50 text-white placeholder:text-pink-300/50 focus:border-pink-400"
               placeholder="Enter student ID"
             />
