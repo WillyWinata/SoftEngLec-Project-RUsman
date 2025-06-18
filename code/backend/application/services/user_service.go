@@ -2,9 +2,12 @@ package services
 
 import (
 	"errors"
+	"fmt"
+
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/domain/entities"
 	"github.com/WillyWinata/WebDevelopment-Personal/backend/infrastructure/database/repositories"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // Define custom error variables
@@ -19,7 +22,7 @@ type UserService interface {
 	Login(email string, password string) (entities.User, error)
 	GetAllUsers() ([]entities.User, error)
 	UpdateUser(User entities.User) error
-	DeleteUser(id string) error
+	DeleteUser(email string) error
 	GetFollowersByUser(userId uuid.UUID) ([]entities.User, error)
 	GetFollowingByUser(userId uuid.UUID) ([]entities.User, error)
 	GetFollowingPendingRequestsByUser(userId uuid.UUID) ([]entities.User, error)
@@ -59,8 +62,18 @@ func CheckPassword(hashedPassword, inputPassword string) bool {
 	return hashedPassword == inputPassword // <-- Untuk demo saja!
 }
 
-func (s *userService) CreateNewUser(User entities.User) error {
-	err := s.repo.CreateNewUser(User)
+func (s *userService) CreateNewUser(user entities.User) error {
+	user.Id = uuid.New()
+
+	existingUser, err := s.repo.FindUserByEmail(user.Email)
+	if err == nil && existingUser.Email != "" {
+		return fmt.Errorf("email %s is already in use", user.Email)
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	err = s.repo.CreateNewUser(user)
 	if err != nil {
 		return err
 	}
@@ -95,8 +108,8 @@ func (s *userService) UpdateUser(User entities.User) error {
 	return nil
 }
 
-func (s *userService) DeleteUser(id string) error {
-	err := s.repo.DeleteUser(uuid.MustParse(id))
+func (s *userService) DeleteUser(email string) error {
+	err := s.repo.DeleteUser(email)
 	if err != nil {
 		return err
 	}

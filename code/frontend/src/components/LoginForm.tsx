@@ -82,14 +82,18 @@ export function LoginForm() {
 
       // BARU: Handle error jika account tidak ditemukan
       if (response.status === 404) {
-        setErrors({ email: "", password: "", other: "Account doesn't exist." });
+        setErrors({ email: "", password: "Wrong Password", other: "" });
         setIsLoading(false);
         return;
       }
 
       // BARU: Handle error jika password salah
       if (response.status === 401) {
-        setErrors({ email: "", password: "Wrong password.", other: "" });
+        setErrors({
+          email: "",
+          password: "Wrong password.",
+          other: "Invalid credentials!",
+        });
         setIsLoading(false);
         return;
       }
@@ -124,7 +128,7 @@ export function LoginForm() {
 
   return (
     <Card className="border-pink-800 bg-gray-900 shadow-lg">
-      <CardContent className="pt-6">
+      <CardContent className="pt-0">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-pink-400">
@@ -197,27 +201,9 @@ export function LoginForm() {
             <div className="text-red-400 text-sm mt-1">{errors.other}</div>
           )}
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="remember"
-                className="h-4 w-4 rounded border-pink-700 bg-gray-800 text-pink-600 focus:ring-pink-500"
-              />
-              <Label htmlFor="remember" className="text-sm text-pink-300">
-                Remember me
-              </Label>
-            </div>
-            <a
-              href="#"
-              className="text-sm font-medium text-pink-400 hover:text-pink-300"
-            >
-              Forgot password?
-            </a>
-          </div>
-
           <Button
             type="submit"
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+            className="w-full bg-pink-600 hover:bg-pink-700 text-white mt-3"
             disabled={isLoading}
           >
             {isLoading ? "Signing in..." : "Sign in"}

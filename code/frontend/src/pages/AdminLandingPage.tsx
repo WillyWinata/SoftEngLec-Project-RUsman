@@ -9,7 +9,7 @@ export default function AdminLandingPage() {
   const navigate = useNavigate();
 
   if (userRole !== "Admin") {
-    navigate("/");
+    navigate("/login");
   }
 
   return (
@@ -18,7 +18,13 @@ export default function AdminLandingPage() {
       <header className="border-b border-pink-500/20 bg-black/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-3">
-            <Shield className="h-8 w-8 text-pink-400" />
+            <Shield
+              onClick={() => {
+                localStorage.removeItem("user");
+                navigate("/login");
+              }} 
+              className="h-8 w-8 text-pink-400 cursor-pointer"
+            />
             <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           </div>
         </div>
